@@ -1,16 +1,17 @@
 import requests
-from Fofa_moudle import settings
+from settings import *
 import base64
 import json
+import fofa
 
 
 def FofaQuery(Qstring):
-    VerifyQueryUrl = "https://fofa.so/api/v1/info/my?email=${0}&key=${1}"
+    VerifyQueryUrl = "https://fofa.so/api/v1/info/my?email={0}&key={1}"
 
     Qstringb64 = base64.b64encode(Qstring.encode('utf8')).decode('utf8')
 
-    FirstRes = requests.get(VerifyQueryUrl.format(settings.Fofa_email_company,settings.Fofa_key_company))
-
+    FirstRes = requests.get(VerifyQueryUrl.format(fofa_email,fofa_key))
+    print(VerifyQueryUrl.format(fofa_email,fofa_key))
     try:
         FirstDict = json.loads(FirstRes.text)
     except:
@@ -20,7 +21,7 @@ def FofaQuery(Qstring):
 
     if FirstDict["error"]:
         SecondRes = requests.get(
-            SecondQueryUrl.format(settings.Fofa_email_company, settings.Fofa_key_company, Qstringb64))
+            SecondQueryUrl.format(fofa_email, fofa_key, Qstringb64))
         SecondDict = json.loads(SecondRes.text)
         SumDict = dict()
         InfoList = SecondDict["results"]
@@ -40,8 +41,8 @@ def FofaQuery(Qstring):
     else:
         return "something error please check your query string"
 
-
-
+if __name__ == '__main__':
+    fofa.Client(fofa_email,fofa_key)
 
 # result = FofaQuery("app=\"ThinkPHP\" && body=\"博彩\"")
 # print(result)
