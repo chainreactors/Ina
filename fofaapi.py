@@ -1,5 +1,5 @@
-from Fofa_moudle import query
-from Fofa_moudle import HandleIP
+from . import query
+from . import HandleIP
 
 
 def ProcessFofa(Query):
