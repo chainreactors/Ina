@@ -26,9 +26,8 @@ class FofaClient:
 
     def query(self,code,page=1,fields="host,ip,port,domain,title"):
 
-        param = {"qbase64":base64.b64encode((self.filtercode+code).encode()).decode(),"email":fofa_email,"key":fofa_key,"page":page,"fields":fields,"size":1000}
+        param = {"qbase64":base64.b64encode((code).encode()).decode(),"email":fofa_email,"key":fofa_key,"page":page,"fields":fields,"size":1000}
         j = self.request(self.search_api_url,param)
-        print(j)
         if "errmsg" in j:
             print("[-] " +j["errmsg"])
             return []
