@@ -24,7 +24,7 @@ class FofaClient:
             self.status = True
             return True
 
-    def query(self,code,page=1,fields="host,ip,port,domain,title"):
+    def query(self,code,page=1,fields="host,ip,port,domain,title,icp"):
 
         param = {"qbase64":base64.b64encode((code).encode()).decode(),"email":fofa_email,"key":fofa_key,"page":page,"fields":fields,"size":1000}
         j = self.request(self.search_api_url,param)
