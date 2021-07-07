@@ -1,7 +1,7 @@
 import requests
 import base64
 
-from .settings import *
+from settings import *
 
 
 class FofaClient:
