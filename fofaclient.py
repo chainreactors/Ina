@@ -11,7 +11,7 @@ class FofaClient:
         self.search_api_url = "/api/v1/search/all"
         self.login_api_url = "/api/v1/info/my"
         self.checkuser()
-        self.filtercode = 'country="CN" && region!="HK" && region!="TW" && title!="彩票" && title!="娱乐" && title!="导航"&& title!="视频" && title!="贝壳" && title!="二手房" && title!="考试" && title!="免费" &&'
+        self.filtercode = ' && country="CN" && region!="HK" && region!="TW" && title!="彩票" && title!="娱乐" && title!="导航"&& title!="视频" && title!="贝壳" && title!="二手房" && title!="考试" && title!="免费"'
 
     def checkuser(self):
         param = {"email":fofa_email,"key":fofa_key}
@@ -24,9 +24,10 @@ class FofaClient:
             self.status = True
             return True
 
-    def query(self,code,page=1,fields="host,ip,port,domain,title,icp"):
-
-        param = {"qbase64":base64.b64encode((code).encode()).decode(),"email":fofa_email,"key":fofa_key,"page":page,"fields":fields,"size":1000}
+    def query(self,code,page=1,isfilter=False,fields="host,ip,port,domain,title,icp"):
+        if isfilter:
+            code += self.filtercode
+        param = {"qbase64": self.base64encode(code),"email":fofa_email,"key":fofa_key,"page":page,"fields":fields,"size":1000}
         j = self.request(self.search_api_url,param)
         if "errmsg" in j:
             print("[-] " +j["errmsg"])
@@ -39,6 +40,9 @@ class FofaClient:
             return res
         return res
 
+    def base64encode(self,code):
+        return base64.b64encode((code).encode()).decode()
+
     def request(self,api,param):
         try:
             r = requests.get(self.base_url+api,params=param)
@@ -49,4 +53,5 @@ class FofaClient:
 
 if __name__ == '__main__':
     fc = FofaClient()
-    fc.query('icon_hash="2075065848"')
+    print(fofa_key)
+    print(fc.query('icon_hash="2075065848"', isfilter=True))

@@ -8,4 +8,4 @@
 # fofa_key = "6c67303712db0965d3a27a0e16132434"
 
 fofa_email = "admin@iswin.org"
-fofa_key = "63998c96366268fb2611e79f35df4816"
+fofa_key = "dee4b9144c176bcf134faae4d6dc2ed5"
