@@ -1,6 +1,7 @@
 from ipaddress import *
 from collections import Counter
 
+
 def count(data):
     return Counter(data)
 
