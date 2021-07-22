@@ -22,10 +22,12 @@ def get_hash(url, hashtype="mmh3"):
     data = get_favicon(url)
     if not data:
         return None,None
+
     if hashtype == "mmh3":
         hash = mmh3.hash(data)
         name = mmh3hash.get(hash,None)
     elif hashtype == "md5":
         hash = md5(data).hexdigest()
         name = md5hash.get(hash,None)
+
     return hash, name
