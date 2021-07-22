@@ -113,7 +113,10 @@ class GetFofa:
     def add_task(self,data):
         ips, urls, domains, icps = self.sort_data(data)
         for icp in icps:
-            self.multi_gethostbyicp(icp)
+            icp = icp.split("-")[0]
+            if icp not in self.icps:
+                self.icps.append(icp)
+                self.multi_gethostbyicp(icp)
             # self.multi_fofa(icp,"icp")
 
         [self.multi_getfaviconhash(url) for url in urls]
