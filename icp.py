@@ -1,4 +1,4 @@
-import os
+import re
 import urllib3
 from urllib import parse
 import requests
@@ -72,5 +72,15 @@ class Beian(object):
                 return []
             return list(map(lambda x: x["serviceName"], content))
 
+
+def get_icp(url):
+    try:
+        r = requests.get(url,verify=False,timeout = 3)
+        if len(icp := re.findall(r".ICP[备|证]\d+?号",r.text)) > 0:
+            return icp
+        return ""
+    except:
+        return ""
+
 if __name__ == '__main__':
-    print(Beian.get_host("京ICP备15005440号"))
+    print(get_icp("https://c.runoob.com/"))
