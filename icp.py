@@ -83,4 +83,4 @@ def get_icp(url):
         return ""
 
 if __name__ == '__main__':
-    print(get_icp("https://c.runoob.com/"))
+    print(Beian.get_host("京ICP备06050845号"))
