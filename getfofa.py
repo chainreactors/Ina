@@ -21,10 +21,14 @@ from icp import Beian,get_icp
 
 
 client = FofaClient()
-
+querys = set()
 def get_fofa(code):
-    logging.info("fofa querying "+code)
-    return client.query(code)
+    if code not in querys:
+        logging.info("fofa querying "+code)
+        querys.add(code)
+        return client.query(code)
+    else:
+        return []
 
 def get_hostbyicp(icp):
     logging.info("icp querying " + icp)
@@ -64,6 +68,21 @@ def getfofaquery(fofatype,fofaquery):
 def getvalues(gevenlets):
     return [i.value for i in gevenlets]
 
+
+def run_fofas(fofatype, fofaquerys,ipset,domainset):
+    for q in fofaquerys:
+        code = getfofaquery(fofatype,q)
+        data = get_fofa(code)
+
+        ips, urls, domains, icps = sort_fofadata(data)
+        if len((newips:=ips-ipset)):
+            logging.info(f"found {len(newips)} new ips from {code}:"+str(newips))
+        ipset = ipset.union(ips)
+        if len(newdomains:=(domains-domainset)):
+            logging.info(f"found {len(newdomains)} new domains from {code}:"+str(domainset))
+        domainset = domainset.union(domains)
+    return ipset,domainset
+
 def get_ipanddomain(datas,ipset:set,domainset:set):
     for code,data in datas.items():
         ips, urls, domains, icps = sort_fofadata(data)
@@ -74,7 +93,7 @@ def get_ipanddomain(datas,ipset:set,domainset:set):
     return ipset,domainset
 
 
-def main(code):
+def run(code):
     firstdata = get_fofa(code)
 
     ipset,urls,domainset,icps = sort_fofadata(firstdata)
@@ -95,18 +114,38 @@ def main(code):
     logging.info("found new domains from icp: "+str(icpdomains-domainset))
     domainset = domainset.union(icpdomains)
 
-    # 第二次执行fofa
-    domainjobs = {getfofaquery("domain", domain):get_fofa(getfofaquery("domain", domain)) for domain in domainset}
-    certjobs = {getfofaquery("cert", domain):get_fofa(getfofaquery("cert", domain)) for domain in domainset}
-    hashjobs = {getfofaquery("icon_hash", hash):get_fofa(getfofaquery("icon_hash", hash)) for hash in icohashs}
+    # # 第二次执行fofa
+    # domainjobs = {getfofaquery("domain", domain):get_fofa(getfofaquery("domain", domain)) for domain in domainset}
+    # certjobs = {getfofaquery("cert", domain):get_fofa(getfofaquery("cert", domain)) for domain in domainset}
+    # hashjobs = {getfofaquery("icon_hash", hash):get_fofa(getfofaquery("icon_hash", hash)) for hash in icohashs}
 
-    logging.info("data processing")
+    # logging.info("data processing")
 
-    ipset,domainset = get_ipanddomain(domainjobs,ipset,domainset)
-    ipset,domainset = get_ipanddomain(certjobs,ipset,domainset)
-    ipset,domainset = get_ipanddomain(hashjobs,ipset,domainset)
+    ipset,domainset = run_fofas("domain",domainset,ipset,domainset)
+    ipset,domainset = run_fofas("cert",domainset,ipset,domainset)
+    ipset,domainset = run_fofas("icon_hash",icohashs,ipset,domainset)
 
     return ipset,domainset
 
+@click.command()
+@click.option("--code","-c",help="fofa查询语句",prompt="input fofa query""")
+@click.option("--filename","-f",help="输出文件名")
+@click.option("--guess","-g",default=False,is_flag=True)
+def main(code,filename,guess):
+    ips,domains = run(code)
+    if guess:
+        ips = [guessCIDR(v) for v in statCIDR(ips).values()]
+    if filename:
+        tmp = open(filename, "w")
+        tmp.write("\n".join(domains.union(ips)))
+        tmp.close()
+    else:
+        print()
+        for ip in ips:
+            print(ip)
+        for domain in domains:
+            print(domain)
+
+
 if __name__ == '__main__':
-    print(main('cert="mca.gov.cn"'))
+    main()
