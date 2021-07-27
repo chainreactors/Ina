@@ -1,3 +1,4 @@
+import logging
 import re
 import urllib3
 from urllib import parse
