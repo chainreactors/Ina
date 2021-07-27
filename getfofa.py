@@ -1,152 +1,112 @@
 import click
-from vthread import pool,thread
-from queue import Queue
-from time import sleep
+import gevent
+from gevent import monkey
+from gevent.pool import Pool
+from operator import add
+from functools import reduce
+import logging
+
+INFO_FORMAT = "%(levelname)s %(message)s"
+ERROR_FORMAT = "%(levelname)s %(message)s"
+logging.basicConfig(level=logging.INFO, format=INFO_FORMAT)
+logging.basicConfig(level=logging.ERROR, format=ERROR_FORMAT)
+monkey.patch_all()
+g = Pool(100)
 
 from fofaclient import FofaClient
 from iputil import *
 from favicon import get_hash
 from icp import Beian,get_icp
 
-class GetFofa:
-    def __init__(self):
-        self.client = FofaClient()
-        self.taskqueue = Queue()
-        self.dataqueue = Queue()
-        self.icocounter = Counter()
-
-        self.domains = []
-        self.ips = []
-        self.icps = []
-        self.urls = []
-        self.printedips = []
-        self.printeddomains = []
-
-    @pool(20,gqueue="ico")
-    def multi_getfaviconhash(self,url):
-        hash,name = get_hash(url,"mmh3")
-        if not name and hash:
-            self.icocounter.update([hash])
-            if self.icocounter[hash] == 3:
-                self.taskqueue.put((hash,"ico"))
-
-    @pool(20,gqueue="icp")
-    def multi_gethostbyicp(self,icp):
-        for host in Beian.get_host(icp):
-            if host not in self.domains:
-                self.domains.append(host)
-                self.taskqueue.put((host,"cert"))
-
-    @pool(20)
-    def multi_geticp(self,url):
-        if url not in self.urls:
-            self.urls.append(url)
-            icp = get_icp(url)
-            if icp and icp not in self.icps:
-                self.multi_gethostbyicp(icp)
-
-    def query_cert(self,domain):
-        return self.client.query(f'cert="{domain}"')
-
-    def query_ico(self,hash):
-        return self.client.query(f'icon_hash="{hash}"')
-
-    def query_icp(self,icp):
-        return self.client.query(f'body="{icp}"')
-
-    def query(self,code):
-        return self.client.query(code)
-
-    @pool(20,gqueue="fofa")
-    def multi_fofa(self,t,source=None):
-        print(t,source)
-        if source == "cert":
-            data = self.query_cert(t)
-        elif source == "icp":
-            data = self.query_icp(t)
-        elif source == "ico":
-            data = self.query_ico(t)
-        else:
-            data = self.query(t)
-
-        if data:
-            self.dataqueue.put(data)
-
-    @pool(1,gqueue="main")
-    def fofa_main(self):
-        while True:
-            # print(self.taskqueue.qsize())
-            for _ in range(self.taskqueue.qsize()):
-                t,source = self.taskqueue.get()
-                print(f"run fofa query from {source}:{t}")
-                self.multi_fofa(t,source)
-                sleep(1)
 
 
-    @pool(1,gqueue="data")
-    def data_handler(self):
-        while True:
-            for _ in range(self.dataqueue.qsize()):
-                data = self.dataqueue.get()
-                self.add_task(data)
-                self.print_log(data)
-                sleep(1)
+client = FofaClient()
 
-    def sort_data(self,data):
-        domains = set()
-        icps = set()
-        urls = set()
-        ips = set()
-        for d in data:
-            url, ip, port, domain, title, icp = d
-            ips.add(ip)
-            if domain:
+def get_fofa(code):
+    logging.info("fofa querying "+code)
+    return client.query(code)
 
-                domains.add(domain)
-            if icp:
-                icps.add(icp)
-            if url:
-                urls.add(url)
-        return ips,urls,domains,icps
+def get_hostbyicp(icp):
+    logging.info("icp querying " + icp)
+    return Beian.get_host(icp)
 
+def get_hashbyurl(url):
+    logging.info("favicon requesting")
+    return get_hash(url)
 
-    def add_task(self,data):
-        ips, urls, domains, icps = self.sort_data(data)
-        for icp in icps:
-            icp = icp.split("-")[0]
-            if icp not in self.icps:
-                self.icps.append(icp)
-                self.multi_gethostbyicp(icp)
-            # self.multi_fofa(icp,"icp")
+def is_contains_chinese(strs):
+    for _char in strs:
+        if '\u4e00' <= _char <= '\u9fa5':
+            return True
+    return False
 
-        [self.multi_getfaviconhash(url) for url in urls]
+def sort_fofadata(data):
+    domains = set()
+    icps = set()
+    urls = set()
+    ips = set()
+    for d in data:
+        url, ip, port, domain, title, icp = d
+        ips.add(ip)
+        if domain:
+            domains.add(domain)
+        if icp:
+            icps.add(icp)
+        if url:
+            urls.add(url)
+    return ips,urls,domains,icps
 
-
-
-    def print_log(self,data,need=["domain","ip"]):
-        # data = list(map(lambda x:dict(zip(("url", "ip", "port", "domain", "title", "icp"),x)),data))
-        for d in data:
-            if d[1] and d[1] not in self.printedips:
-                self.printedips.append(d[1])
-                print(d[1])
-            if d[3] and d[3] not in self.printeddomains:
-                self.printeddomains.append(d[3])
-                print(d[3])
+def getfofaquery(fofatype,fofaquery):
+    assert fofatype in ["cert","domain","ip","icon_hash"] ,"error fofa query type"
+    return f'{fofatype}="{fofaquery}"'
 
 
+def getvalues(gevenlets):
+    return [i.value for i in gevenlets]
+
+def get_ipanddomain(datas,ipset:set,domainset:set):
+    for code,data in datas.items():
+        ips, urls, domains, icps = sort_fofadata(data)
+        logging.info(f"found new ips from {code}:"+str(ips-ipset))
+        ipset = ipset.union(ips)
+        logging.info(f"found new domains from {code}:"+str(domainset-domains))
+        domainset = domainset.union(domains)
+    return ipset,domainset
 
 
-    def run(self,code):
-        self.data_handler()
-        self.fofa_main()
-        self.multi_fofa(code)
+def main(code):
+    firstdata = get_fofa(code)
 
+    ipset,urls,domainset,icps = sort_fofadata(firstdata)
+    logging.info(f"found {len(ipset)} ips, {len(domainset)} domains")
+    # 获取ico hash值,通过icp获取domains
+    icojobs = [g.spawn(get_hash,url) for url in urls]
+    icpjobs = [g.spawn(Beian.get_host,icp) for icp in icps]
+    gevent.joinall(icojobs)
 
+    # gevent.joinall(icojobs+icpjobs)
 
+    # 过滤ico数据
+    icohashs = [i[0] for i in getvalues(icojobs) if i[0] and not i[1]]
+    icohashs = [k for k, v in Counter(icohashs).items() if v >= 2]
+
+    # 处理icp数据,过滤中文域名
+    icpdomains = set(filter(lambda x:not is_contains_chinese(x) ,reduce(add, getvalues(icpjobs))))
+    logging.info("found new domains from icp: "+str(icpdomains-domainset))
+    domainset = domainset.union(icpdomains)
+
+    # 第二次执行fofa
+    domainjobs = {getfofaquery("domain", domain):get_fofa(getfofaquery("domain", domain)) for domain in domainset}
+    certjobs = {getfofaquery("cert", domain):get_fofa(getfofaquery("cert", domain)) for domain in domainset}
+    hashjobs = {getfofaquery("icon_hash", hash):get_fofa(getfofaquery("icon_hash", hash)) for hash in icohashs}
+
+    logging.info("data processing")
+
+    ipset,domainset = get_ipanddomain(domainjobs,ipset,domainset)
+    ipset,domainset = get_ipanddomain(certjobs,ipset,domainset)
+    ipset,domainset = get_ipanddomain(hashjobs,ipset,domainset)
+
+    return ipset,domainset
 
 if __name__ == '__main__':
-    # c = FofaClient()
-    # res = spider(c,"mca.gov.cn")
-    gf = GetFofa()
-    gf.run('cert="mca.gov.cn"')
-    # print(gf.multi_geticp())
+    print(main('cert="mca.gov.cn"'))

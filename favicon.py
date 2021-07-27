@@ -2,13 +2,16 @@ import codecs
 import mmh3
 import requests
 from hashlib import md5
-
+import urllib3
 from md5hash import md5hash
 from mmh3hash import mmh3hash
 
+requests.packages.urllib3.disable_warnings()
 
 def get_favicon(url):
     try:
+        if not url.startswith("http"):
+            url = "http://" + url
         r = requests.get(url + "/favicon.ico",verify=False)
         if r.status_code == 200:
 
@@ -34,4 +37,4 @@ def get_hash(url, hashtype="mmh3"):
     return hash, name
 
 if __name__ == '__main__':
-    print(get_hash("http://www.creva.org.cn/"))
+    print(get_hash("https://60.10.61.135"))

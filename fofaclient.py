@@ -47,8 +47,8 @@ class FofaClient:
         try:
             r = requests.get(self.base_url+api,params=param)
             return r.json()
-        except:
-            return False
+        except Exception as e:
+            return {"errmsg":str(e)}
 
 
 if __name__ == '__main__':
