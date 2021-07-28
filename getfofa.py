@@ -17,7 +17,7 @@ from fofaclient import FofaClient
 from iputil import *
 from favicon import get_hash
 from icp import Beian,get_icp
-from cls import FofaData
+from fofadata import FofaData
 
 
 
@@ -109,7 +109,7 @@ def run(code):
     # gevent.joinall(icojobs+icpjobs)
 
     # 过滤ico数据
-    icohashs = [i[0] for i in getvalues(icojobs) if i[0] and not i[1]]
+    icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
     icohashs = [k for k, v in Counter(icohashs).items() if v >= 2]
     fofadata.union("ico",icohashs)
 
@@ -150,6 +150,11 @@ def main(code,filename,output,guess):
         for o in outputs:
             for i in data[o]:
                 print(i)
+
+    while  (output := click.prompt("choice output(ip,ico,icp,url,domain) or enter [exit] exit"))!="exit":
+        for data in fofadata.getdata(output.split(",")):
+            print("\n".join(data))
+
 
 
 if __name__ == '__main__':
