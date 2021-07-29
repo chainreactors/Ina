@@ -77,27 +77,18 @@ def run_fofas(fofatype, fofaquerys,fofadata:FofaData):
 
         ips, urls, domains, icps = sort_fofadata(data)
         # 输出新出现的数据
-        if len((newips:=ips-fofadata["ip"])):
-            logging.info(f"found {len(newips)} new ips from {code}:"+str(newips))
-        if len(newdomains:=(domains-fofadata["domain"])):
-            logging.info(f"found {len(newdomains)} new domains from {code}:"+str(newdomains))
+        # if len((newips:=ips-fofadata["ip"])):
+        #     logging.info(f"found {len(newips)} new ips from {code}:"+str(newips))
+        # if len(newdomains:=(domains-fofadata["domain"])):
+        #     logging.info(f"found {len(newdomains)} new domains from {code}:"+str(newdomains))
 
         fofadata.union_fofa(ips, urls, domains, icps)
     return fofadata
 
-# def get_ipanddomain(datas,ipset:set,domainset:set):
-#     for code,data in datas.items():
-#         ips, urls, domains, icps = sort_fofadata(data)
-#         logging.info(f"found new ips from {code}:"+str(ips-ipset))
-#         ipset = ipset.union(ips)
-#         logging.info(f"found new domains from {code}:"+str(domainset-domains))
-#         domainset.union("domain",domain)
-#     return ipset,domainset
-
 
 def run(code):
     firstdata = get_fofa(code)
-    fofadata = FofaData()
+    fofadata = FofaData(True,logging.info)
     ipset,urls,domainset,icps = sort_fofadata(firstdata)
     fofadata.union_fofa(ipset,urls,domainset,icps)
     logging.info(f"found {len(ipset)} ips, {len(domainset)} domains")
@@ -115,7 +106,7 @@ def run(code):
 
     # 处理icp数据,过滤中文域名
     icpdomains = set(filter(lambda x:not is_contains_chinese(x) ,reduce(add, getvalues(icpjobs))))
-    logging.info("found new domains from icp: "+str(icpdomains-fofadata["domain"]))
+    # logging.info("found new domains from icp: "+str(icpdomains-fofadata["domain"]))
     fofadata.union("domain",icpdomains)
 
 
