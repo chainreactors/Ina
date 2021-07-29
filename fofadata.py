@@ -1,4 +1,8 @@
 class FofaData:
+    def __init__(self,printdiff=False,printfunc=print):
+        self.printdiff = printdiff
+        self.printfunc = printfunc
+
     def __getitem__(self, item):
         return getattr(self,item)
 
@@ -21,6 +25,9 @@ class FofaData:
         return k
 
     def union(self,t,data):
+        if self.printdiff:
+            diff = set(data) - self[t]
+            self.printfunc("add %d new %s %s"%(len(diff),t,str(diff)))
         self[t] = self[t].union(set(data))
 
     def union_fofa(self,ips,urls,domains,icps):
