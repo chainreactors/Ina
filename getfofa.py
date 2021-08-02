@@ -69,6 +69,17 @@ def getfofaquery(fofatype,fofaquery):
 def getvalues(gevenlets):
     return [i.value for i in gevenlets]
 
+def filter_icp(jobs):
+    if jobs == None:
+        return []
+    return set(filter(lambda x:not is_contains_chinese(x) ,reduce(add, getvalues(jobs))))
+
+def filter_ico(jobs):
+    if jobs == None:
+        return []
+    icohashs = [str(i[0]) for i in getvalues(jobs) if i[0] and not i[1]]
+    return [k for k, v in Counter(icohashs).items() if v >= 3]
+
 
 def run_fofas(fofatype, fofaquerys,fofadata:FofaData):
     for q in fofaquerys:
@@ -100,13 +111,14 @@ def run(code):
     # gevent.joinall(icojobs+icpjobs)
 
     # 过滤ico数据
-    icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
-    icohashs = [k for k, v in Counter(icohashs).items() if v >= 3]
+    # icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
+    # icohashs = [k for k, v in Counter(icohashs).items() if v >= 3]
+    icohashs = filter_ico(icojobs)
     fofadata.union("ico",icohashs)
 
+
     # 处理icp数据,过滤中文域名
-    icpdomains = set(filter(lambda x:not is_contains_chinese(x) ,reduce(add, getvalues(icpjobs))))
-    # logging.info("found new domains from icp: "+str(icpdomains-fofadata["domain"]))
+    icpdomains = filter_icp(icpjobs)
     ips,domains = sort_doaminandip(icpdomains)
     fofadata.union("domain",domains)
     fofadata.union("ip",ips)
@@ -117,36 +129,34 @@ def run(code):
     fofadata = run_fofas("cert",domains,fofadata)
 
     # 再次处理ico和icp
-    icojobs = [g.spawn(get_hash,url) for url in fofadata["url"]-urls]
+    icojobs_d2 = [g.spawn(get_hash,url) for url in fofadata["url"]-urls]
     icpjobs = [g.spawn(Beian.get_host,icp) for icp in fofadata["icp"]-icps]
-    gevent.joinall(icojobs+icpjobs)
+    gevent.joinall(icojobs_d2+icpjobs)
 
-    icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
-    icohashs = [k for k, v in Counter(icohashs).items() if v >= 3]
+    # icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
+    # icohashs = [k for k, v in Counter(icohashs).items() if v >= 3]
+    icohashs = filter_ico(icojobs+icojobs_d2)
     fofadata.union("ico",icohashs)
 
-    icpdomains = set(filter(lambda x:not is_contains_chinese(x) ,reduce(add, getvalues(icpjobs))))
-    # logging.info("found new domains from icp: "+str(icpdomains-fofadata["domain"]))
+    icpdomains = filter_icp(icpjobs)
     ips,domains = sort_doaminandip(icpdomains)
     fofadata.union("domain",domains)
     fofadata.union("ip",ips)
 
     fofadata = run_fofas("icon_hash",fofadata["ico"],fofadata)
-
+    fofadata["cidr"] = guessCIDRs(fofadata["ip"])
     return fofadata
 
 
 @click.command()
 @click.option("--code","-c",help="fofa查询语句",prompt="input fofa query""")
 @click.option("--filename","-f",help="输出文件名")
-# @click.option("--guess","-g",default=False,is_flag=True)
 @click.option("--output","-o",default="ip,domain,cidr")
 def main(code,filename,output):
     fofadata = run(code)
     # 输出的ip地址为地址段
     outputs = output.split(",")
     outdata = dict(zip(outputs,fofadata.getdata(outputs)))
-    fofadata["cidr"] = guessCIDRs(outdata["ip"])
 
     if filename:
         tmp = open(filename, "w")
