@@ -72,7 +72,10 @@ def getvalues(gevenlets):
 def filter_icp(jobs):
     if jobs == None:
         return []
-    return set(filter(lambda x:not is_contains_chinese(x) ,reduce(add, getvalues(jobs))))
+    res = []
+    for domains in getvalues(jobs):
+        res += list(filter(lambda x: not is_contains_chinese(x),domains))
+    return res
 
 def filter_ico(jobs):
     if jobs == None:
