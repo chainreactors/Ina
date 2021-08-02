@@ -11,7 +11,7 @@ class FofaClient:
         self.search_api_url = "/api/v1/search/all"
         self.login_api_url = "/api/v1/info/my"
         self.checkuser()
-        self.filtercode = ' && country="CN" && region!="HK" && region!="TW" && title!="彩票" && title!="娱乐" && title!="导航"&& title!="视频" && title!="贝壳" && title!="二手房" && title!="考试" && title!="免费"'
+        self.filtercode = ' && (country="CN" && region!="HK" && region!="TW" && title!="彩票" && title!="娱乐" && title!="导航"&& title!="视频" && title!="贝壳" && title!="二手房" && title!="考试" && title!="免费" && is_fraud=false)'
 
     def checkuser(self):
         param = {"email":fofa_email,"key":fofa_key}
