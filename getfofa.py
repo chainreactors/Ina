@@ -90,7 +90,6 @@ def run(code):
     firstdata = get_fofa(code)
     fofadata = FofaData(True,logging.info)
     ipset,urls,domainset,icps = sort_fofadata(firstdata)
-    icps = [icp.split("-")[0] for icp in icps]
     fofadata.union_fofa(ipset,urls,domainset,icps)
     logging.info(f"found {len(ipset)} ips, {len(domainset)} domains")
     # 获取ico hash值,通过icp获取domains
@@ -102,18 +101,37 @@ def run(code):
 
     # 过滤ico数据
     icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
-    icohashs = [k for k, v in Counter(icohashs).items() if v >= 2]
+    icohashs = [k for k, v in Counter(icohashs).items() if v >= 3]
     fofadata.union("ico",icohashs)
 
     # 处理icp数据,过滤中文域名
     icpdomains = set(filter(lambda x:not is_contains_chinese(x) ,reduce(add, getvalues(icpjobs))))
     # logging.info("found new domains from icp: "+str(icpdomains-fofadata["domain"]))
-    fofadata.union("domain",icpdomains)
+    ips,domains = sort_doaminandip(icpdomains)
+    fofadata.union("domain",domains)
+    fofadata.union("ip",ips)
 
+    # domains = [domain for domain in fofadata["domain"] if not is_ipv4(domain)]
+    ips,icos,icps,urls,domains = fofadata.getdata()
+    fofadata = run_fofas("domain",domains,fofadata)
+    fofadata = run_fofas("cert",domains,fofadata)
 
-    fofadata = run_fofas("domain",domainset,fofadata)
-    fofadata = run_fofas("cert",domainset,fofadata)
-    fofadata = run_fofas("icon_hash",icohashs,fofadata)
+    # 再次处理ico和icp
+    icojobs = [g.spawn(get_hash,url) for url in fofadata["url"]-urls]
+    icpjobs = [g.spawn(Beian.get_host,icp) for icp in fofadata["icp"]-icps]
+    gevent.joinall(icojobs+icpjobs)
+
+    icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
+    icohashs = [k for k, v in Counter(icohashs).items() if v >= 3]
+    fofadata.union("ico",icohashs)
+
+    icpdomains = set(filter(lambda x:not is_contains_chinese(x) ,reduce(add, getvalues(icpjobs))))
+    # logging.info("found new domains from icp: "+str(icpdomains-fofadata["domain"]))
+    ips,domains = sort_doaminandip(icpdomains)
+    fofadata.union("domain",domains)
+    fofadata.union("ip",ips)
+
+    fofadata = run_fofas("icon_hash",fofadata["ico"],fofadata)
 
     return fofadata
 

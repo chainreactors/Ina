@@ -25,9 +25,14 @@ class FofaData:
         return k
 
     def union(self,t,data):
+        if t == "icp": # icp格式化
+            data = [icp.split("-")[0] for icp in data]
+
         if self.printdiff:
             diff = set(data) - self[t]
-            self.printfunc("add %d new %s %s"%(len(diff),t,str(diff)))
+            if len(diff) != 0:
+                self.printfunc("add %d new %s %s"%(len(diff),t,str(diff)))
+
         self[t] = self[t].union(set(data))
 
     def union_fofa(self,ips,urls,domains,icps):
@@ -36,6 +41,8 @@ class FofaData:
         self.union("domain",domains)
         self.union("icp",icps)
 
-    def getdata(self,types):
+    def getdata(self, types=None):
+        if types is None:
+            types = ["ip", "icp","ico", "url", "domain"]
         return [self[t] for t in types]
 
