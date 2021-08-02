@@ -27,7 +27,7 @@ def get_fofa(code):
     if code not in querys:
         logging.info("fofa querying "+code)
         querys.add(code)
-        return client.query(code)
+        return client.query(code,isfilter=True)
     else:
         return []
 
@@ -90,6 +90,7 @@ def run(code):
     firstdata = get_fofa(code)
     fofadata = FofaData(True,logging.info)
     ipset,urls,domainset,icps = sort_fofadata(firstdata)
+    icps = [icp.split("-")[0] for icp in icps]
     fofadata.union_fofa(ipset,urls,domainset,icps)
     logging.info(f"found {len(ipset)} ips, {len(domainset)} domains")
     # 获取ico hash值,通过icp获取domains
@@ -143,8 +144,8 @@ def main(code,filename,output,guess):
                 print(i)
 
     while  (output := click.prompt("choice output(ip,ico,icp,url,domain) or enter [exit] exit"))!="exit":
-        for data in fofadata.getdata(output.split(",")):
-            print("\n".join(data))
+        for d in fofadata.getdata(output.split(",")):
+            print("\n".join(d))
 
 
 
