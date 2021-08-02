@@ -94,7 +94,7 @@ def run(code):
     logging.info(f"found {len(ipset)} ips, {len(domainset)} domains")
     # 获取ico hash值,通过icp获取domains
     icojobs = [g.spawn(get_hash,url) for url in urls]
-    icpjobs = [g.spawn(Beian.get_host,icp) for icp in icps]
+    icpjobs = [g.spawn(Beian.get_host,icp) for icp in fofadata["icp"]]
     gevent.joinall(icojobs+icpjobs)
 
     # gevent.joinall(icojobs+icpjobs)
@@ -139,29 +139,28 @@ def run(code):
 @click.command()
 @click.option("--code","-c",help="fofa查询语句",prompt="input fofa query""")
 @click.option("--filename","-f",help="输出文件名")
-@click.option("--guess","-g",default=False,is_flag=True)
-@click.option("--output","-o",default="ip,domain")
-def main(code,filename,output,guess):
+# @click.option("--guess","-g",default=False,is_flag=True)
+@click.option("--output","-o",default="ip,domain,cidr")
+def main(code,filename,output):
     fofadata = run(code)
     # 输出的ip地址为地址段
     outputs = output.split(",")
-    data = dict(zip(outputs,fofadata.getdata(outputs)))
-    if guess:
-        data["ip"] = [guessCIDR(v) for v in statCIDR(data["ip"]).values()]
+    outdata = dict(zip(outputs,fofadata.getdata(outputs)))
+    fofadata["cidr"] = guessCIDRs(outdata["ip"])
 
     if filename:
         tmp = open(filename, "w")
         for o in outputs:
-            tmp.write("\n".join(data[o]))
+            tmp.write("\n".join(outdata[o]))
             tmp.write("\n")
         tmp.close()
     else:
         print()
         for o in outputs:
-            for i in data[o]:
+            for i in outdata[o]:
                 print(i)
 
-    while  (output := click.prompt("choice output(ip,ico,icp,url,domain) or enter [exit] exit"))!="exit":
+    while (output := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [exit] exit")) != "exit":
         for d in fofadata.getdata(output.split(",")):
             print("\n".join(d))
 

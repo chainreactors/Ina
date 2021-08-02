@@ -19,7 +19,7 @@ class FofaData:
             return self.__dict__[item]
 
     def getkey(self,k):
-        assert k in ["ipset","icpset","urlset","domainset","icoset","ico","ip","icp","url","domain"],"data type not found"
+        assert k in ["ipset","icpset","urlset","domainset","icoset","ico","ip","icp","url","domain","cidr"],"data type not found"
         if not k.endswith("set"):
             k += "set"
         return k

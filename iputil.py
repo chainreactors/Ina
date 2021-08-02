@@ -62,6 +62,10 @@ def guessCIDR(ips):
 
     return ip2supernet(ips[0],res)
 
+
+def guessCIDRs(data):
+    return [guessCIDR(v) for v in statCIDR(data).values()]
+
 def is_ipv4(ip):
     try:
         ip_address(ip)
