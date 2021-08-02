@@ -1,6 +1,6 @@
 from ipaddress import *
 from collections import Counter
-
+from itertools import groupby
 
 def count(data):
     return Counter(data)
@@ -70,12 +70,14 @@ def is_ipv4(ip):
         return False
 
 
+def sort_doaminandip(data):
+    res = {k:list(g) for k,g in groupby(sorted(data),is_ipv4)}
+    return res.get(True,[]),res.get(False,[])
+
 if __name__ == '__main__':
-    pass
-    # ips = fixcomma2list(ips)
-    # print(guessCIDR(ips))
-    # ip = ip_network('111.21.246.141') # type: IPv4Network
-    # print(ip)
+    ips,domains = sort_doaminandip(
+        ["a.com"])
+    print(ips,domains)
 
 
 

@@ -4,7 +4,6 @@ import urllib3
 from urllib import parse
 import requests
 
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
