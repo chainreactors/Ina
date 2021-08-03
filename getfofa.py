@@ -3,7 +3,7 @@ import gevent
 from gevent import monkey
 from gevent.pool import Pool
 from operator import add
-from functools import reduce
+from functools import reduce,partial
 import logging
 
 INFO_FORMAT = "%(levelname)s %(message)s"
@@ -74,7 +74,7 @@ def filter_icp(jobs):
         return []
     res = []
     for domains in getvalues(jobs):
-        res += list(filter(lambda x: not is_contains_chinese(x),domains))
+        res += set(filter(lambda x: not is_contains_chinese(x),domains))
     return res
 
 def filter_ico(jobs):
@@ -101,6 +101,7 @@ def run_fofas(fofatype, fofaquerys,fofadata:FofaData):
 
 
 def run(code):
+    # todo: 重构,改成递归形式
     firstdata = get_fofa(code)
     fofadata = FofaData(True,logging.info)
     ipset,urls,domainset,icps = sort_fofadata(firstdata)
@@ -127,7 +128,7 @@ def run(code):
     fofadata.union("ip",ips)
 
     # domains = [domain for domain in fofadata["domain"] if not is_ipv4(domain)]
-    ips,icos,icps,urls,domains = fofadata.getdata()
+    ips,icos,icps,urls,domains,cidrs = fofadata.getdata().values()
     fofadata = run_fofas("domain",domains,fofadata)
     fofadata = run_fofas("cert",domains,fofadata)
 
@@ -150,34 +151,42 @@ def run(code):
     fofadata["cidr"] = guessCIDRs(fofadata["ip"])
     return fofadata
 
+def write2file(filename,string):
+    tmp = open(filename, "a+",encoding="utf-8")
+    tmp.write(string)
+    tmp.close()
 
 @click.command()
-@click.option("--code","-c",help="fofa查询语句",prompt="input fofa query""")
+# @click.option("--code","-c",help="fofa查询语句",prompt="input fofa query""")
 @click.option("--filename","-f",help="输出文件名")
 @click.option("--output","-o",default="ip,domain,cidr")
-def main(code,filename,output):
-    fofadata = run(code)
-    # 输出的ip地址为地址段
-    outputs = output.split(",")
-    outdata = dict(zip(outputs,fofadata.getdata(outputs)))
+def command(filename,output):
+    fofadata = FofaData()
+    main(filename,output,fofadata)
 
+
+def main(filename,output,fofadata):
     if filename:
-        tmp = open(filename, "w")
-        for o in outputs:
-            tmp.write("\n".join(outdata[o]))
-            tmp.write("\n")
-        tmp.close()
+        outfunc = partial(write2file, filename=filename)
     else:
-        print()
-        for o in outputs:
-            for i in outdata[o]:
-                print(i)
+        outfunc = print
+    while (fofacode := click.prompt("input fofa query")) != "exit":
+        tmpfd = run(fofacode)
+        tmpfd.outputdata(output.split(","),outfunc=outfunc)
 
-    while (output := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [exit] exit")) != "exit":
-        for d in fofadata.getdata(output.split(",")):
-            print("\n".join(d))
-
+        while out := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [c|continue], [exit], [diff], [merge]"):
+            if out == "exit":
+                exit()
+            elif out in ["continue","c"]: # 如果输入continue,则爬下一条fofa语句
+                break
+            elif out == "diff":
+                (tmpfd-fofadata).outputdata(outfunc=outfunc)
+            elif out == "merge":
+                fofadata.merge(tmpfd)
+            else:
+                for d in tmpfd.getdata(out.split(",")).values():
+                    print("\n".join(d))
 
 
 if __name__ == '__main__':
-    main()
+    command()

@@ -14,7 +14,6 @@ def get_favicon(url):
             url = "http://" + url
         r = requests.get(url + "/favicon.ico",verify=False)
         if r.status_code == 200:
-
             return codecs.lookup('base64').encode(r.content)[0]
         else:
             return False
@@ -37,4 +36,4 @@ def get_hash(url, hashtype="mmh3"):
     return hash, name
 
 if __name__ == '__main__':
-    print(get_hash("https://60.10.61.135"))
+    print(get_hash("http://www.htbjhcz.com/"))

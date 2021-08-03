@@ -8,7 +8,7 @@ class FofaData:
 
     def __setitem__(self, key, value):
         key = self.getkey(key)
-        self.__dict__[key] = value
+        self.__dict__[key] = set(value)
 
     def __getattr__(self, item:str):
         item = self.getkey(item)
@@ -18,10 +18,19 @@ class FofaData:
             self.__dict__[item] = set()
             return self.__dict__[item]
 
+    def __sub__(self, other):
+        """
+        :type other FofaData
+        :param other:
+        :return:
+        """
+        res = FofaData()
+        for k,v in other.getdata().items():
+            res[k] = self[k] - set(v)
+        return res
+
     def getkey(self,k):
-        assert k in ["ipset","icpset","urlset","domainset","icoset","ico","ip","icp","url","domain","cidr"],"data type not found"
-        if not k.endswith("set"):
-            k += "set"
+        assert k in ["ico","ip","icp","url","domain","cidr"],"data type not found"
         return k
 
     def union(self,t,data):
@@ -41,8 +50,29 @@ class FofaData:
         self.union("domain",domains)
         self.union("icp",icps)
 
+    def merge(self,fofadata):
+        for k,v in fofadata.getdata().items():
+            if k == "cidr":
+                continue
+            self.union(k,v)
+
+
     def getdata(self, types=None):
         if types is None:
-            types = ["ip", "icp","ico", "url", "domain"]
-        return [self[t] for t in types]
+            types = ["ip", "icp","ico", "url", "domain","cidr"]
+        return {t:self[t] for t in types}
 
+    def outputdata(self,types=["ip","cidr","domain"], outfunc=print):
+        for t in types:
+            if len(self[t]) != 0:
+                outfunc("\n".join(self[t])+"\n")
+
+
+
+if __name__ == '__main__':
+    f1 = FofaData()
+    f2 = FofaData()
+    f1["ip"] = {"1.1.1.1","2.2.2.2"}
+    f2["ip"] = {"2.2.2.2"}
+    res = f1-f2
+    print(res)
