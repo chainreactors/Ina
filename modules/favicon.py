@@ -3,8 +3,8 @@ import mmh3
 import requests
 from hashlib import md5
 import urllib3
-from md5hash import md5hash
-from mmh3hash import mmh3hash
+from .md5hash import md5hash
+from .mmh3hash import mmh3hash
 
 requests.packages.urllib3.disable_warnings()
 

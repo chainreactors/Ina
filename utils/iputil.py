@@ -62,6 +62,9 @@ def guessCIDR(ips):
 
     return ip2supernet(ips[0],res)
 
+def mergeCIDRs(cidrs1,cidrs2):
+    for c in cidrs1:
+        pass
 
 def guessCIDRs(data):
     return [guessCIDR(v) for v in statCIDR(data).values()]
@@ -77,6 +80,7 @@ def is_ipv4(ip):
 def sort_doaminandip(data):
     res = {k:list(g) for k,g in groupby(sorted(data),is_ipv4)}
     return res.get(True,[]),res.get(False,[])
+
 
 if __name__ == '__main__':
     ips,domains = sort_doaminandip(

@@ -1,4 +1,6 @@
+from utils.iputil import guessCIDRs
 class FofaData:
+    types = ["ico","ip","icp","url","domain","cidr"]
     def __init__(self,printdiff=False,printfunc=print):
         self.printdiff = printdiff
         self.printfunc = printfunc
@@ -25,12 +27,12 @@ class FofaData:
         :return:
         """
         res = FofaData()
-        for k,v in other.getdata().items():
-            res[k] = self[k] - set(v)
+        for t in self.types:
+            res[t] = self[t] - other[t]
         return res
 
     def getkey(self,k):
-        assert k in ["ico","ip","icp","url","domain","cidr"],"data type not found"
+        assert k in self.types,"data type not found"
         return k
 
     def union(self,t,data):
@@ -50,16 +52,17 @@ class FofaData:
         self.union("domain",domains)
         self.union("icp",icps)
 
-    def merge(self,fofadata):
-        for k,v in fofadata.getdata().items():
-            if k == "cidr":
-                continue
-            self.union(k,v)
+    def merge(self, other):
+        for t in self.types:
+            if t == "cidr":
+                self["cidr"] = guessCIDRs(self["ip"])
+            else:
+                self.union(t,other[t])
 
 
     def getdata(self, types=None):
         if types is None:
-            types = ["ip", "icp","ico", "url", "domain","cidr"]
+            types = self.types
         return {t:self[t] for t in types}
 
     def outputdata(self,types=["ip","cidr","domain"], outfunc=print):

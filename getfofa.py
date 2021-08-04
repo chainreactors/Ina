@@ -2,9 +2,9 @@ import click
 import gevent
 from gevent import monkey
 from gevent.pool import Pool
-from operator import add
-from functools import reduce,partial
+from functools import partial
 import logging
+
 
 INFO_FORMAT = "%(levelname)s %(message)s"
 ERROR_FORMAT = "%(levelname)s %(message)s"
@@ -13,13 +13,8 @@ logging.basicConfig(level=logging.ERROR, format=ERROR_FORMAT)
 monkey.patch_all()
 g = Pool(100)
 
-from fofaclient import FofaClient
-from iputil import *
-from favicon import get_hash
-from icp import Beian,get_icp
-from fofadata import FofaData
-
-
+from utils import *
+from modules import *
 
 client = FofaClient()
 querys = set()
@@ -39,12 +34,6 @@ def get_hashbyurl(url):
     logging.info("favicon requesting")
     return get_hash(url)
 
-def is_contains_chinese(strs):
-    for _char in strs:
-        if '\u4e00' <= _char <= '\u9fa5':
-            return True
-    return False
-
 def sort_fofadata(data):
     domains = set()
     icps = set()
@@ -61,27 +50,10 @@ def sort_fofadata(data):
             urls.add(url)
     return ips,urls,domains,icps
 
+
 def getfofaquery(fofatype,fofaquery):
     assert fofatype in ["cert","domain","ip","icon_hash"] ,"error fofa query type"
     return f'{fofatype}="{fofaquery}"'
-
-
-def getvalues(gevenlets):
-    return [i.value for i in gevenlets]
-
-def filter_icp(jobs):
-    if jobs == None:
-        return []
-    res = []
-    for domains in getvalues(jobs):
-        res += set(filter(lambda x: not is_contains_chinese(x),domains))
-    return res
-
-def filter_ico(jobs):
-    if jobs == None:
-        return []
-    icohashs = [str(i[0]) for i in getvalues(jobs) if i[0] and not i[1]]
-    return [k for k, v in Counter(icohashs).items() if v >= 3]
 
 
 def run_fofas(fofatype, fofaquerys,fofadata:FofaData):
@@ -90,12 +62,6 @@ def run_fofas(fofatype, fofaquerys,fofadata:FofaData):
         data = get_fofa(code)
 
         ips, urls, domains, icps = sort_fofadata(data)
-        # 输出新出现的数据
-        # if len((newips:=ips-fofadata["ip"])):
-        #     logging.info(f"found {len(newips)} new ips from {code}:"+str(newips))
-        # if len(newdomains:=(domains-fofadata["domain"])):
-        #     logging.info(f"found {len(newdomains)} new domains from {code}:"+str(newdomains))
-
         fofadata.union_fofa(ips, urls, domains, icps)
     return fofadata
 
@@ -151,19 +117,17 @@ def run(code):
     fofadata["cidr"] = guessCIDRs(fofadata["ip"])
     return fofadata
 
-def write2file(filename,string):
-    tmp = open(filename, "a+",encoding="utf-8")
-    tmp.write(string)
-    tmp.close()
 
 @click.command()
 # @click.option("--code","-c",help="fofa查询语句",prompt="input fofa query""")
 @click.option("--filename","-f",help="输出文件名")
 @click.option("--output","-o",default="ip,domain,cidr")
 def command(filename,output):
-    fofadata = FofaData()
-    main(filename,output,fofadata)
+    main(filename,output,FofaData())
 
+
+def command_again():
+    pass
 
 def main(filename,output,fofadata):
     if filename:
@@ -174,7 +138,7 @@ def main(filename,output,fofadata):
         tmpfd = run(fofacode)
         tmpfd.outputdata(output.split(","),outfunc=outfunc)
 
-        while out := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [c|continue], [exit], [diff], [merge]"):
+        while out := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [help], [c|continue], [exit], [diff], [merge]"):
             if out == "exit":
                 exit()
             elif out in ["continue","c"]: # 如果输入continue,则爬下一条fofa语句
@@ -184,8 +148,7 @@ def main(filename,output,fofadata):
             elif out == "merge":
                 fofadata.merge(tmpfd)
             else:
-                for d in tmpfd.getdata(out.split(",")).values():
-                    print("\n".join(d))
+                fofadata.outputdata(outfunc=print)
 
 
 if __name__ == '__main__':
