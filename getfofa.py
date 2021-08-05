@@ -138,17 +138,30 @@ def main(filename,output,fofadata):
         tmpfd = run(fofacode)
         tmpfd.outputdata(output.split(","),outfunc=outfunc)
 
-        while out := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [help], [c|continue], [exit], [diff], [merge]"):
+        while out := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [help], [c|continue], [exit], [diff], [merge], [to_file <filename>]"):
             if out == "exit":
                 exit()
+            elif out == "":
+                continue
             elif out in ["continue","c"]: # 如果输入continue,则爬下一条fofa语句
                 break
             elif out == "diff":
                 (tmpfd-fofadata).outputdata(outfunc=outfunc)
             elif out == "merge":
                 fofadata.merge(tmpfd)
+            elif "to_file" in out:
+                outs = out.split(" ")
+                if len(outs) >= 2 or filename:
+                    tmpfilename = filename if filename else outs[-1]
+                    printfunc= partial(write2file,filename=tmpfilename)
+                    sum = fofadata.outputdata(outfunc=printfunc)
+                    if sum:
+                        print("maybe no result or not merge")
+                else:
+                    print("please input filename,example: to_file out.txt")
+                    continue
             else:
-                fofadata.outputdata(outfunc=print)
+                fofadata.outputdata(out.split(","),outfunc=print)
 
 
 if __name__ == '__main__':
