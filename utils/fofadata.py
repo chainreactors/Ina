@@ -66,9 +66,13 @@ class FofaData:
         return {t:self[t] for t in types}
 
     def outputdata(self,types=["ip","cidr","domain"], outfunc=print):
+        sum = 0
         for t in types:
-            if len(self[t]) != 0:
+            if c:=len(self[t]) != 0:
+                sum += c
                 outfunc("\n".join(self[t])+"\n")
+        return sum
+
 
 
 
