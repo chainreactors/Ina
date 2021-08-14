@@ -30,7 +30,6 @@ class FofaData:
         for t in self.types:
             res[t] = self[t] - other[t]
         return res
-
     def getkey(self,k):
         assert k in self.types,"data type not found"
         return k
