@@ -12,7 +12,7 @@ def get_favicon(url):
     try:
         if not url.startswith("http"):
             url = "http://" + url
-        r = requests.get(url + "/favicon.ico",verify=False)
+        r = requests.get(url + "/favicon.ico",verify=False,timeout=3)
         if r.status_code == 200:
             return codecs.lookup('base64').encode(r.content)[0]
         else:
