@@ -5,7 +5,10 @@ from hashlib import md5
 import urllib3
 from .md5hash import md5hash
 from .mmh3hash import mmh3hash
+import logging
 
+urllib3_logger = logging.getLogger('urllib3')
+urllib3_logger.setLevel(logging.CRITICAL)
 requests.packages.urllib3.disable_warnings()
 
 def get_favicon(url):
