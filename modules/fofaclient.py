@@ -54,4 +54,8 @@ class FofaClient:
 if __name__ == '__main__':
     fc = FofaClient()
     print(fofa_key)
-    print(fc.query('icon_hash="2075065848"', isfilter=True))
+    res = fc.query('title="锐捷网络-EWEB网管系统" && port="4430"', isfilter=True)
+    for i in res[:1000]:
+        if not i[0].startswith("https"):
+            i[0] = "https://" + i[0]
+        print(i[0])
