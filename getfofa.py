@@ -3,18 +3,12 @@ import gevent
 from gevent import monkey
 from gevent.pool import Pool
 from functools import partial
-import logging
-
-
-INFO_FORMAT = "%(levelname)s %(message)s"
-ERROR_FORMAT = "%(levelname)s %(message)s"
-logging.basicConfig(level=logging.INFO, format=INFO_FORMAT)
-logging.basicConfig(level=logging.ERROR, format=ERROR_FORMAT)
 monkey.patch_all()
 g = Pool(100)
 
 from utils import *
-from modules import *
+from webtookit import *
+from settings import *
 
 client = FofaClient()
 querys = set()
