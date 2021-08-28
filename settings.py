@@ -22,3 +22,4 @@ recu_cert = 3
 recu_domain = 3
 recu_icp = 3
 recu_ico = 2
+recu_cidr = 1
