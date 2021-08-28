@@ -1,115 +1,97 @@
+import logging
+
 import click
 import gevent
+import vthread
 from gevent import monkey
 from gevent.pool import Pool
 from functools import partial
+from queue import Queue
+from vthread import pool
+
 monkey.patch_all()
 g = Pool(100)
 
 from utils import *
 from webtookit import *
-from settings import *
+
 
 client = FofaClient()
+taskqueue = Queue()
+fd = FofaData(True, logging.info)
 querys = set()
+
+
 def get_fofa(code):
-    if code not in querys:
+    if code not in querys and code != "":
         logging.info("fofa querying "+code)
         querys.add(code)
         return client.query(code,isfilter=True)
     else:
         return []
 
-def get_hostbyicp(icp):
-    logging.info("icp querying " + icp)
-    return Beian.get_host(icp)
 
-def get_hashbyurl(url):
-    logging.info("favicon requesting")
-    return get_hash(url)
-
-def sort_fofadata(data):
-    domains = set()
-    icps = set()
-    urls = set()
-    ips = set()
-    for d in data:
-        url, ip, port, domain, title, icp = d
-        ips.add(ip)
-        if domain:
-            domains.add(domain)
-        if icp:
-            icps.add(icp)
-        if url:
-            urls.add(url)
-    return ips,urls,domains,icps
+def combine_fofa_result(fd:FofaData, data):
+    """
+    :param data:
+    :return : different urls,ips,domains,icps,bool
+    :rtype : List[set],bool
+    """
+    if len(data) == 0:
+        return {},{},{},{},False
+    keys = ["url", "ip", "", "domain", "", "icp"]
+    return *[fd.union(keys[i],set(v)) for i,v in enumerate(zip(*data)) if i !=2 and i != 4],True
 
 
 def getfofaquery(fofatype,fofaquery):
     assert fofatype in ["cert","domain","ip","icon_hash"] ,"error fofa query type"
+    if fofaquery == "":
+        return ""
     return f'{fofatype}="{fofaquery}"'
 
 
-def run_fofas(fofatype, fofaquerys,fofadata:FofaData):
+def run_fofas(fofatype, fofaquerys):
     for q in fofaquerys:
         code = getfofaquery(fofatype,q)
         data = get_fofa(code)
+        combine_fofa_result(fd, data)
+        # fofadata.union_fofa(ips, urls, domains, icps)
 
-        ips, urls, domains, icps = sort_fofadata(data)
-        fofadata.union_fofa(ips, urls, domains, icps)
-    return fofadata
+def enqueue(k,data,depth):
+    for d in data:
+        taskqueue.put((getfofaquery(k,d),depth))
+
+@CheckDepth
+def run_fofa(code,depth=1):
+    data = get_fofa(code)
+    urls, ips, domains, icps, ok = combine_fofa_result(fd, data) # 合并数据,返回新增的数据
+    if not ok: # 如果fofa无数据,则退出
+        return
+    enqueue("ico",callback_ico(urls),depth+1) # 获取ico,将得到的ico_hash加入到队列
+    _, domains_icp = callback_icp(icps) # 通过icp获取ip与domain
+    domains.union(domains_icp)
+    enqueue("domain",domains,depth+1)  # 将domains以domain加入到队列
+    enqueue("cert",domains,depth+1) # 将domains以cert加入到队列
 
 
 def run(code):
-    # todo: 重构,改成递归形式
-    firstdata = get_fofa(code)
-    fofadata = FofaData(True,logging.info)
-    ipset,urls,domainset,icps = sort_fofadata(firstdata)
-    fofadata.union_fofa(ipset,urls,domainset,icps)
-    logging.info(f"found {len(ipset)} ips, {len(domainset)} domains")
-    # 获取ico hash值,通过icp获取domains
+    run_fofa(code)
+    while taskqueue.qsize() > 0:
+        run_fofa(*taskqueue.get())
+
+
+def callback_ico(urls):
     icojobs = [g.spawn(get_hash,url) for url in urls]
-    icpjobs = [g.spawn(Beian.get_host,icp) for icp in fofadata["icp"]]
-    gevent.joinall(icojobs+icpjobs)
-
-    # gevent.joinall(icojobs+icpjobs)
-
-    # 过滤ico数据
-    # icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
-    # icohashs = [k for k, v in Counter(icohashs).items() if v >= 3]
-    icohashs = filter_ico(icojobs)
-    fofadata.union("ico",icohashs)
+    gevent.joinall(icojobs)
+    return filter_ico(icojobs)
 
 
-    # 处理icp数据,过滤中文域名
-    icpdomains = filter_icp(icpjobs)
-    ips,domains = sort_doaminandip(icpdomains)
-    fofadata.union("domain",domains)
-    fofadata.union("ip",ips)
-
-    # domains = [domain for domain in fofadata["domain"] if not is_ipv4(domain)]
-    ips,icos,icps,urls,domains,cidrs = fofadata.getdata().values()
-    fofadata = run_fofas("domain",domains,fofadata)
-    fofadata = run_fofas("cert",domains,fofadata)
-
-    # 再次处理ico和icp
-    icojobs_d2 = [g.spawn(get_hash,url) for url in fofadata["url"]-urls]
-    icpjobs = [g.spawn(Beian.get_host,icp) for icp in fofadata["icp"]-icps]
-    gevent.joinall(icojobs_d2+icpjobs)
-
-    # icohashs = [str(i[0]) for i in getvalues(icojobs) if i[0] and not i[1]]
-    # icohashs = [k for k, v in Counter(icohashs).items() if v >= 3]
-    icohashs = filter_ico(icojobs+icojobs_d2)
-    fofadata.union("ico",icohashs)
-
-    icpdomains = filter_icp(icpjobs)
-    ips,domains = sort_doaminandip(icpdomains)
-    fofadata.union("domain",domains)
-    fofadata.union("ip",ips)
-
-    fofadata = run_fofas("icon_hash",fofadata["ico"],fofadata)
-    fofadata["cidr"] = guessCIDRs(fofadata["ip"])
-    return fofadata
+def callback_icp(icps):
+    icpjobs = [g.spawn(Beian.get_host, icp) for icp in icps]
+    gevent.joinall(icpjobs)
+    ips,domains = sort_doaminandip(filter_icp(icpjobs))
+    fd.unions(ip=ips, domain=domains)
+    return ips,domains
 
 
 @click.command()
@@ -120,8 +102,6 @@ def command(filename,output):
     main(filename,output,FofaData())
 
 
-def command_again():
-    pass
 
 def main(filename,output,fofadata):
     if filename:
@@ -129,7 +109,9 @@ def main(filename,output,fofadata):
     else:
         outfunc = print
     while (fofacode := click.prompt("input fofa query")) != "exit":
-        tmpfd = run(fofacode)
+        run(fofacode)
+        tmpfd = fd
+        fd.initialize()
         tmpfd.outputdata(output.split(","),outfunc=outfunc)
 
         while out := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [help], [c|continue], [exit], [diff], [merge], [to_file <filename>]"):
@@ -140,7 +122,7 @@ def main(filename,output,fofadata):
             elif out in ["continue","c"]: # 如果输入continue,则爬下一条fofa语句
                 break
             elif out == "diff":
-                (tmpfd-fofadata).outputdata(outfunc=outfunc)
+                (tmpfd - fofadata).outputdata(outfunc=outfunc)
             elif out == "merge":
                 fofadata.merge(tmpfd)
             elif "to_file" in out:
@@ -159,4 +141,6 @@ def main(filename,output,fofadata):
 
 
 if __name__ == '__main__':
+    # command()
     command()
+    # pool.waitall()
