@@ -1,3 +1,4 @@
+import logging
 # Fofa_email_stolen = "hancool@163.com"
 # Fofa_key_stolen = "238ebb08523bff5cf297b96364f62440"
 
@@ -10,6 +11,11 @@
 fofa_email = "admin@iswin.org"
 fofa_key = "dee4b9144c176bcf134faae4d6dc2ed5"
 
+
+INFO_FORMAT = "%(levelname)s %(message)s"
+ERROR_FORMAT = "%(levelname)s %(message)s"
+logging.basicConfig(level=logging.INFO, format=INFO_FORMAT)
+logging.basicConfig(level=logging.ERROR, format=ERROR_FORMAT)
 
 # 递归配置
 recu_cert = 3
