@@ -30,20 +30,26 @@ class FofaData:
         for t in self.types:
             res[t] = self[t] - other[t]
         return res
+
     def getkey(self,k):
-        assert k in self.types,"data type not found"
+        assert k in self.types,"%s type not found"%k
         return k
 
     def union(self,t,data):
         if t == "icp": # icp格式化
             data = [icp.split("-")[0] for icp in data]
-
+        diff = set(data) - self[t]
         if self.printdiff:
-            diff = set(data) - self[t]
             if len(diff) != 0:
                 self.printfunc("add %d new %s %s"%(len(diff),t,str(diff)))
-
         self[t] = self[t].union(set(data))
+        return diff
+
+    def unions(self,**kwargs):
+        diffs = []
+        for k,v in kwargs.items():
+            diffs.append(self.union(k,v))
+        return diffs
 
     def union_fofa(self,ips,urls,domains,icps):
         self.union("ip",ips)
@@ -58,6 +64,9 @@ class FofaData:
             else:
                 self.union(t,other[t])
 
+    def initialize(self):
+        for t in FofaData.types:
+            self[t] = set()
 
     def getdata(self, types=None):
         if types is None:

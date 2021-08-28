@@ -8,8 +8,8 @@ import logging
 # fofa_email = "m09ic@foxmail.com"
 # fofa_key = "6c67303712db0965d3a27a0e16132434"
 
-fofa_email = "admin@iswin.org"
-fofa_key = "dee4b9144c176bcf134faae4d6dc2ed5"
+# fofa_email = "admin@iswin.org"
+# fofa_key = "dee4b9144c176bcf134faae4d6dc2ed5"
 
 
 INFO_FORMAT = "%(levelname)s %(message)s"
@@ -20,5 +20,5 @@ logging.basicConfig(level=logging.ERROR, format=ERROR_FORMAT)
 # 递归配置
 recu_cert = 3
 recu_domain = 3
-recu_icp = 2
+recu_icp = 3
 recu_ico = 2
