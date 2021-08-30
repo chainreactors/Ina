@@ -1,6 +1,7 @@
 from utils.iputil import guessCIDRs
 class FofaData:
     types = ["ico","ip","icp","url","domain","cidr"]
+
     def __init__(self,printdiff=False,printfunc=print):
         self.printdiff = printdiff
         self.printfunc = printfunc
@@ -35,6 +36,12 @@ class FofaData:
         assert k in self.types,"%s type not found"%k
         return k
 
+    def check_type(self,t):
+        if t in self.types:
+            return True
+        else:
+            return False
+
     def union(self,t,data):
         if t == "icp": # icp格式化
             data = [icp.split("-")[0] for icp in data]
@@ -65,7 +72,7 @@ class FofaData:
                 self.union(t,other[t])
 
     def initialize(self):
-        for t in FofaData.types:
+        for t in self.types:
             self[t] = set()
 
     def getdata(self, types=None):
@@ -74,12 +81,9 @@ class FofaData:
         return {t:self[t] for t in types}
 
     def outputdata(self,types=["ip","cidr","domain"], outfunc=print):
-        sum = 0
         for t in types:
-            if c:=len(self[t]) != 0:
-                sum += c
+            if self.check_type(t) and len(self[t]):
                 outfunc("\n".join(self[t])+"\n")
-        return sum
 
 
 
