@@ -82,6 +82,9 @@ class FofaData:
 
     def outputdata(self,types=["ip","cidr","domain"], outfunc=print):
         for t in types:
+            if t == "cidr":
+                self["cidr"] = guessCIDRs(self["ip"])
+
             if self.check_type(t) and len(self[t]):
                 outfunc("\n".join(self[t])+"\n")
 
