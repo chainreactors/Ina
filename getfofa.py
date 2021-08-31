@@ -1,5 +1,6 @@
+import json
 import logging
-
+import os
 import click
 import gevent
 from gevent import monkey
@@ -117,6 +118,31 @@ def callback_icp(icps,fd):
     return ips,domains
 
 
+def loadfile(filename):
+    f = open(filename,"r",encoding="utf-8")
+    s = f.read()
+    return loadjson(s)
+
+def loadjson(s):
+    try:
+        return json.loads(s)
+    except:
+        return ""
+
+
+def getcode(code):
+    codes = code.split(" ")
+    if os.path.exists(codes[-1]):
+        s = loadfile(codes[-1])
+    else:
+        s = loadjson(" ".join(codes[1:]))
+    if s and "getcompany" in s:
+        return s["getcompany"]
+    else:
+        return ""
+
+
+
 @click.command()
 @click.option("--filename","-f",help="输出文件名")
 @click.option("--output","-o",default="ip,domain,cidr")
@@ -134,6 +160,12 @@ def main(filename,output,fd:FofaData):
     fds = {}
     index = 0
     while (fofacode := click.prompt("input fofa query")) != "exit":
+        if fofacode.startswith("from"):
+            j = getcode(fofacode)
+            if j:
+                fofacode = join_fofaqueries(domain=j)
+            else:
+                continue
         index += 1
         tmpfd = run(fofacode)
         fds[index] = (fofacode,tmpfd)
