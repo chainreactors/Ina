@@ -144,18 +144,26 @@ def getcode(code):
 
 
 @click.command()
+@click.option("--code","-c",help="单条语句搜索,不递归爬取,无法与其他语句合并")
 @click.option("--filename","-f",help="输出文件名")
 @click.option("--output","-o",default="ip,domain,cidr")
-def command(filename,output):
-    main(filename,output,FofaData(True))
+def command(code,filename,output):
+    main(code,filename,output,FofaData(True))
 
 
 
-def main(filename,output,fd:FofaData):
+def main(code,filename,output,fd:FofaData):
     if filename:
         outfunc = partial(write2file, filename=filename)
     else:
         outfunc = print
+
+    if code:
+        data = get_fofa(code)
+        combine_fofa_result(fd,data)
+        print()
+        fd.outputdata(["ico","ip","icp","url","domain","cidr"],outfunc=outfunc)
+        exit(0)
 
     fds = {}
     index = 0
