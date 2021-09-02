@@ -40,8 +40,7 @@ def getcode(code):
 @click.option("--filename","-f",help="输出文件名")
 @click.option("--output","-o",default="ip,domain,cidr")
 def command(code,filename,output):
-    main(code,filename,output,FofaData(True))
-
+    main(code,filename,output,FofaData(False))
 
 
 def main(code,filename,output,fd:FofaData):
@@ -67,9 +66,13 @@ def main(code,filename,output,fd:FofaData):
             else:
                 continue
         index += 1
-        tmpfd = run(fofacode)
+        tmpfd = run(fofacode,fd)
         fds[index] = (fofacode,tmpfd)
-        tmpfd.outputdata(output.split(","),outfunc=outfunc)
+        if sum([len(i) for i in fd.diffs_fd(tmpfd)]):
+            logging.info("found new assets:")
+            (tmpfd - fd).outputdata(output.split(","),outfunc=outfunc)
+        else:
+            logging.info("not found new asset")
 
         while out := click.prompt("choice output(ip,cidr,ico,icp,url,domain) or enter [help], [c|continue], [exit], [diff], [merge], [to_file <filename>]"):
             if out == "exit":
@@ -79,20 +82,20 @@ def main(code,filename,output,fd:FofaData):
             elif out in ["continue","c"]: # 如果输入continue,则爬下一条fofa语句
                 break
             elif out == "diff":
+                logging.info("print new assets different from fd")
                 (tmpfd - fd).outputdata(outfunc=outfunc)
             elif "merge" in out:
                 if len(v := out.split(" ")) == 1:
                     fd.merge(tmpfd)
                 else:
                     fd.merge(fds[v][1])
+                logging.info("merge success")
             elif "to_file" in out:
                 outs = out.split(" ")
                 if len(outs) >= 2 or filename:
                     tmpfilename = filename if filename else outs[-1]
                     printfunc= partial(write2file,filename=tmpfilename)
-                    sum = fd.outputdata(outfunc=printfunc)
-                    if sum:
-                        print("maybe no result or not merge")
+                    fd.outputdata(outfunc=printfunc)
                 else:
                     print("please input filename,example: to_file out.txt")
                     continue
