@@ -1,9 +1,13 @@
+from gevent import monkey
+monkey.patch_all()
 import json
 import os
 import click
 from functools import partial
 
 from lib import *
+
+
 
 
 def loadfile(filename):
@@ -102,6 +106,5 @@ def main(code,filename,output,fd:FofaData):
 
 if __name__ == '__main__':
     # command()
-
     command()
     # pool.waitall()
