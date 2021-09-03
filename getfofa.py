@@ -1,11 +1,13 @@
 from gevent import monkey
-monkey.patch_all()
+# monkey.patch_all()
 import json
 import os
 import click
+import logging
 from functools import partial
 
 from lib import *
+from webtookit import *
 
 
 
@@ -44,14 +46,16 @@ def command(code,filename,output):
 
 
 def main(code,filename,output,fd:FofaData):
+    fofa = Fofa(FofaClient())
+
     if filename:
         outfunc = partial(write2file, filename=filename)
     else:
         outfunc = print
 
     if code:
-        data = get_fofa(code)
-        combine_fofa_result(fd,data)
+        data = fofa.get_fofa(code)
+        fofa.combine_fofa_result(fd,data)
         print()
         fd.outputdata(["ico","ip","icp","url","domain","cidr"],outfunc=outfunc)
         exit(0)
@@ -66,7 +70,7 @@ def main(code,filename,output,fd:FofaData):
             else:
                 continue
         index += 1
-        tmpfd = run(fofacode,fd)
+        tmpfd = fofa.run(fofacode,fd)
         fds[index] = (fofacode,tmpfd)
         if sum([len(i) for i in fd.diffs_fd(tmpfd)]):
             logging.info("found new assets:")
