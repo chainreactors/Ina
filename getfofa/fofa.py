@@ -76,17 +76,21 @@ class Fofa:
         self.enqueue("domain", diffdomains, depth + 1)  # 将domains以domain加入到队列 # 将domains以cert加入到队列
         self.enqueue("cert", diffdomains, depth + 1)
 
-    def run(self,code,fd):
-        tmpfd = FofaData(False)
-        tmpfd.merge(fd)
-        tmpfd.printdiff = True
-        tmpfd.printfunc = logging.info
+    def run(self,code):
+        tmpfd = self.copy_fd()
         self.run_fofa(code, fd=tmpfd)
         while self.taskqueue.qsize() > 0:
             k, targets, depth = self.taskqueue.get()
             if targets:
                 self.run_fofa(k, targets, fd=tmpfd, depth=depth)
 
+        return tmpfd
+
+    def copy_fd(self):
+        tmpfd = FofaData(False)
+        tmpfd.merge(self.fd)
+        tmpfd.printdiff = True
+        tmpfd.printfunc = logging.info
         return tmpfd
 
     def callback_ico(self,urls, fd):
