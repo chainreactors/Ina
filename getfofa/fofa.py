@@ -24,7 +24,6 @@ class Fofa:
         else:
             return []
 
-
     def cset(self,iter):
         "remove blank elem"
         s = set(iter)
