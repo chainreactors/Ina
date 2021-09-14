@@ -2,7 +2,6 @@ import gevent
 from queue import Queue
 from gevent.pool import Pool
 
-from .iputil import *
 from .util import *
 from .fofadata import FofaData
 from .Depth import *
