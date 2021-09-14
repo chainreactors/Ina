@@ -9,8 +9,8 @@ from webtookit import *
 
 
 class Fofa:
-    def __init__(self, client, thread=100):
-        self.client = client
+    def __init__(self, thread=100):
+        self.client = FofaClient()
         self.taskqueue = Queue()
         self.querys = set()
         self.g = Pool(thread)
