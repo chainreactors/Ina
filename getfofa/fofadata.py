@@ -1,4 +1,4 @@
-from .iputil import guessCIDRs
+from webtookit.utils import *
 
 
 class FofaData:
@@ -15,7 +15,7 @@ class FofaData:
         key = self.getkey(key)
         self.__dict__[key] = set(value)
 
-    def __getattr__(self, item:str):
+    def __getattr__(self, item):
         item = self.getkey(item)
         if item in self.__dict__:
             return self.__dict__[item]
@@ -45,17 +45,29 @@ class FofaData:
             return False
 
     def _icp(self,icps):
-        return [icp.split("-")[0] for icp in icps]
+        return {icp.split("-")[0] for icp in icps}
+
+    def _ipv4(self, ips):
+        return {ip for ip in ips if is_ipv4(ip)}
+
+    def update_cidr(self):
+        cidr = guessCIDRs(self["ip"])
+        self["cidr"] = cidr
+        return cidr
 
     def union(self,t,data):
+        data = set(data)
         if t == "icp": # icp格式化
             data = self._icp(data)
-
-        diff = set(data) - self[t]
+        elif t == "ip":
+            data = self._ipv4(data)
+        elif t == "cidr":
+            return self.update_cidr()
+        diff = data - self[t]
         if self.printdiff:
             if len(diff) != 0:
                 self.printfunc("add %d new %s %s"%(len(diff),t,str(diff)))
-        self[t] = self[t].union(set(data))
+        self[t] = self[t].union(data)
         return diff
 
     def unions(self,**kwargs):
@@ -80,10 +92,7 @@ class FofaData:
 
     def merge(self, other):
         for t in self.types:
-            if t == "cidr":
-                self["cidr"] = guessCIDRs(other["ip"])
-            else:
-                self.union(t,other[t])
+            self.union(t,other[t])
 
     def initialize(self):
         for t in self.types:
@@ -95,10 +104,8 @@ class FofaData:
         return {t:self[t] for t in types}
 
     def outputdata(self,types=["ip","cidr","domain"], outfunc=print):
+        self.update_cidr()
         for t in types:
-            if t == "cidr":
-                self["cidr"] = guessCIDRs(self["ip"])
-
             if self.check_type(t) and len(self[t]):
                 outfunc("\n".join(self[t])+"\n")
 
