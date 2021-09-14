@@ -41,7 +41,7 @@ def command(code, filename, output):
 
 
 def main(code, filename, output):
-    fofa = Fofa(FofaClient())
+    fofa = Fofa()
 
     if filename:
         outfunc = partial(write2file, filename=filename)
