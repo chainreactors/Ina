@@ -10,6 +10,7 @@ from webtookit import *
 
 class Fofa:
     def __init__(self, thread=100):
+        self.beian = Beian_TYC()
         self.client = FofaClient()
         self.taskqueue = Queue()
         self.querys = set()
@@ -97,16 +98,19 @@ class Fofa:
         icos = filter_ico(icojobs)
         return fd.union("ico",icos)
 
-    def filter_icp(self,jobs):
-        if jobs == None:
-            return []
-        res = []
-        for domains in getvalues(jobs):
-            res += [i for i in domains.keys() if not is_contains_chinese(i)]
-        return res
+    # def filter_icp(self,jobs):
+    #     if jobs == None:
+    #         return []
+    #     res = []
+    #     for domains in getvalues(jobs):
+    #         res += [i for i in domains.keys() if not is_contains_chinese(i)]
+    #     return res
+    def filter_domains(self,domains):
+        return [domain for domain in domains if not is_contains_chinese(domain)]
 
     def callback_icp(self,icps, fd):
-        icpjobs = [self.g.spawn(Beian.get_host, icp) for icp in icps]
-        gevent.joinall(icpjobs)
-        ips, domains = sort_doaminandip(self.filter_icp(icpjobs))
+        res = []
+        for icp in icps:
+            res += self.beian.get_domain_from_icp(icp)
+        ips, domains = sort_doaminandip(self.filter_domains(res))
         return fd.unions(ip=ips, domain=domains)
