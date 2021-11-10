@@ -1,7 +1,7 @@
 from gevent import monkey
 monkey.patch_all()
 
-from getfofa import *
+from core import *
 
 
 if __name__ == '__main__':
