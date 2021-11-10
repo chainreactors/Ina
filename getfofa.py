@@ -1,7 +1,7 @@
 from gevent import monkey
 monkey.patch_all()
 
-from getfofa import *
+from core import *
 from webtookit import *
 import click,json,os,logging
 from functools import partial

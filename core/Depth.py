@@ -17,10 +17,10 @@ class CheckDepth:
             return True
         return False
 
-    def __call__(self, *args,fd,depth=1):
-        if self.too_deep(args[0],depth):
-            return
-        return self._func(*args, fd=fd, depth=depth)
+    # def __call__(self, *args,fd,depth=1):
+    #     if self.too_deep(args[0],depth):
+    #         return
+    #     return self._func(*args, fd=fd, depth=depth)
 
     def __get__(self, instance, owner):
         def wrap(*args, fd,depth=1):
