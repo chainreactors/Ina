@@ -1,11 +1,13 @@
-import gevent
+import logging,gevent
 from queue import Queue
 from gevent.pool import Pool
 
 from .util import *
 from .fofadata import FofaData
-from .Depth import *
+from .fofacode import FofaCode
+from .depth import *
 from webtookit import *
+from settings import cidrcollect
 
 
 class Fofa:
@@ -13,14 +15,13 @@ class Fofa:
         self.beian = Beian_TYC()
         self.client = FofaClient()
         self.taskqueue = Queue()
-        self.querys = set()
         self.g = Pool(thread)
         self.fd = FofaData()
+        self.fc = FofaCode()
 
-    def get_fofa(self,code):
-        if code not in self.querys and code != "":
+    def get_fofa(self, fc):
+        if code := self.fc.diffunion(fc):
             logging.info("fofa querying " + code)
-            self.querys.add(code)
             return self.client.query(code, isfilter=True)
         else:
             return []
@@ -56,13 +57,13 @@ class Fofa:
     @CheckDepth
     def run_fofa(self, *args, fd: FofaData, depth):
         if len(args) == 1:
-            data = self.get_fofa(args[0])
+            data = self.get_fofa(FofaCode(args[0]))
         elif len(args) > 1:
             key, targets = args
-            code = join_fofaqueries(**{key: targets})
-            data = self.get_fofa(code)
+            data = self.get_fofa(FofaCode(**{key: targets}))
         else:
             return
+
         urls, ips, domains, icps, ok = self.combine_fofa_result(fd, data)  # 合并数据,返回新增的数据
         if not ok:  # 如果fofa无数据,则退出
             return
@@ -76,14 +77,23 @@ class Fofa:
         self.enqueue("cert", diffdomains, depth + 1)
 
     def run(self,code):
-        tmpfd = self.copy_fd()
-        self.run_fofa(code, fd=tmpfd)
+        fd = self.copy_fd()
+        self.run_fofa(code, fd=fd)
         while self.taskqueue.qsize() > 0:
             k, targets, depth = self.taskqueue.get()
             if targets:
-                self.run_fofa(k, targets, fd=tmpfd, depth=depth)
+                self.run_fofa(k, targets, fd=fd, depth=depth)
 
-        return tmpfd
+        # 爬虫结束后,收集所有的ip与端口
+        if not cidrcollect:
+            return fd
+
+        for cidr in filter(lambda x:x.split("/")[1] != "32", fd.update_cidr()):
+            logging.info("collect cidr assets %s"%cidr)
+            data = self.get_fofa(FofaCode(ip=cidr))
+            self.combine_fofa_result(fd, data)
+
+        return fd
 
     def copy_fd(self):
         tmpfd = FofaData(False)
@@ -114,3 +124,4 @@ class Fofa:
             res += self.beian.get_domain_from_icp(icp)
         ips, domains = sort_doaminandip(self.filter_domains(res))
         return fd.unions(ip=ips, domain=domains)
+
