@@ -109,13 +109,3 @@ class FofaData:
             if self.check_type(t) and len(self[t]):
                 outfunc("\n".join(self[t])+"\n")
 
-
-
-
-if __name__ == '__main__':
-    f1 = FofaData()
-    f2 = FofaData()
-    f1["ip"] = {"1.1.1.1","2.2.2.2"}
-    f2["ip"] = {"2.2.2.2"}
-    res = f1-f2
-    print(res)
