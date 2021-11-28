@@ -6,7 +6,8 @@ from .util import *
 from .fofadata import FofaData
 from .fofacode import FofaCode
 from .depth import *
-from webtookit import *
+from .fofaclient import FofaClient
+from webtookit import Beian_TYC, sort_doaminandip, get_hash
 from settings import cidrcollect
 
 

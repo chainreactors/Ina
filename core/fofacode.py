@@ -1,5 +1,9 @@
 
 class FofaPair:
+    """
+    Fofa查询语句的最小单位,为一对键值对
+    """
+
     def __init__(self,k,v):
         self.key = k
         self.value = v
@@ -15,6 +19,9 @@ class FofaPair:
 
 
 class FofaCode:
+    """
+    用作记录已经查询过的语句,防止多次重复查询影响效率,也为未来的Cache做准备
+    """
     def __init__(self, code=None, **kwargs):
         self.params = set()
         if code:
