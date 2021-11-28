@@ -85,10 +85,7 @@ class FofaData:
         return [other[t] - self[t] for t in self.types]
 
     def union_fofa(self,ips,urls,domains,icps):
-        self.union("ip",ips)
-        self.union("url",urls)
-        self.union("domain",domains)
-        self.union("icp",icps)
+        self.unions(ip=ips,url=urls,domain=domains,icp=icps)
 
     def merge(self, other):
         for t in self.types:
