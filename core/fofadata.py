@@ -1,4 +1,4 @@
-from webtookit.utils import *
+from webtookit.utils import is_ipv4, guessCIDRs
 
 
 class FofaData:

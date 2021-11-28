@@ -1,11 +1,11 @@
-import logging,gevent
+import logging, gevent
 from queue import Queue
 from gevent.pool import Pool
 
 from .util import *
 from .fofadata import FofaData
 from .fofacode import FofaCode
-from .depth import *
+from .depth import CheckDepth
 from .fofaclient import FofaClient
 from webtookit import Beian_TYC, sort_doaminandip, get_hash
 from settings import cidrcollect
