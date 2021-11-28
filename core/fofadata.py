@@ -109,3 +109,6 @@ class FofaData:
             if self.check_type(t) and len(self[t]):
                 outfunc("\n".join(self[t])+"\n")
 
+    def to_json(self):
+        self.update_cidr()
+        return {t: self[t] for t in self.types}
