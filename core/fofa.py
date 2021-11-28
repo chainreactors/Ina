@@ -69,7 +69,8 @@ class Fofa:
             return
 
         # 获取ico,将得到的ico_hash加入到队列
-        self.enqueue("icon_hash", self.callback_ico(urls, fd), depth + 1)
+        if depth < recu_ico:
+            self.enqueue("icon_hash", self.callback_ico(urls, fd), depth + 1)
 
         _, domains_icp = self.callback_icp(icps, fd)  # 通过icp获取ip与domain
         diffdomains = domains.union(domains_icp)
