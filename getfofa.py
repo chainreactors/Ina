@@ -2,7 +2,6 @@ from gevent import monkey
 monkey.patch_all()
 
 from core import *
-from webtookit import *
 import click,json,os,logging
 from functools import partial
 
@@ -61,7 +60,7 @@ def main(code, filename, output):
         if fofacode.startswith("from"):
             j = getcode(fofacode)
             if j:
-                fofacode = join_fofaqueries(domain=j)
+                fofacode = FofaCode(domain=j)
             else:
                 continue
         index += 1

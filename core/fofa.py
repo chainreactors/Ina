@@ -8,7 +8,7 @@ from .fofacode import FofaCode
 from .depth import CheckDepth
 from .fofaclient import FofaClient
 from webtookit import Beian_TYC, sort_doaminandip, get_hash
-from settings import cidrcollect
+from settings import cidrcollect,recu_ico
 
 
 class Fofa:
@@ -21,6 +21,8 @@ class Fofa:
         self.fc = FofaCode()
 
     def get_fofa(self, fc):
+        if isinstance(fc, str):
+            fc = FofaCode(fc)
         if code := self.fc.diffunion(fc):
             logging.info("fofa querying " + code)
             return self.client.query(code, isfilter=True)

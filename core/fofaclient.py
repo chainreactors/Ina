@@ -56,22 +56,3 @@ class FofaClient:
             return r.json()
         except Exception as e:
             return {"errmsg":str(e)}
-
-
-def get_fofaquery(fofatype, fofaquery):
-    if fofaquery == "":
-        return ""
-    return f'{fofatype}="{fofaquery}"'
-
-
-def join_fofaqueries(**kwargs):
-    codes = []
-    for k,queries in kwargs.items():
-        codes.append(" || ".join(map(lambda x:get_fofaquery(k,x),queries)))
-    return " || ".join(codes)
-
-def parse_fofacode(code):
-    codes = code.split(" || ")
-    # print(code[])
-
-
