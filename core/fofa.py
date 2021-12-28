@@ -24,7 +24,7 @@ class Fofa:
         if isinstance(fc, str):
             fc = FofaCode(fc)
         if code := self.fc.diffunion(fc):
-            logging.info("fofa querying " + code)
+            logging.debug("fofa querying " + code)
             return self.client.query(code, isfilter=True)
         else:
             return []
@@ -123,6 +123,7 @@ class Fofa:
         return [domain for domain in domains if not is_contains_chinese(domain)]
 
     def callback_icp(self,icps, fd):
+        logging.info("requests for %s"%icps)
         res = []
         for icp in icps:
             res += self.beian.get_domain_from_icp(icp)

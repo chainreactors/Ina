@@ -37,6 +37,7 @@ class FofaClient:
         param.update(self.auth)
         j = self.request(self.search_api_url,param)
         if "errmsg" in j:
+            print(j)
             print("[-] " +j["errmsg"])
             return []
         res = j["results"]
