@@ -23,8 +23,8 @@ class CheckDepth:
     #     return self._func(*args, fd=fd, depth=depth)
 
     def __get__(self, instance, owner):
-        def wrap(*args, fd,depth=1):
+        def wrap(*args,depth=1):
             if self.too_deep(args[0], depth):
                 return
-            return self._func(instance, *args, fd=fd, depth=depth)
+            return self._func(instance, *args, depth=depth)
         return wrap
