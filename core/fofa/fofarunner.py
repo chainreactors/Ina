@@ -1,13 +1,9 @@
-import logging, gevent
-from queue import Queue
+import logging
 import vthread
 
-from ..util import *
 from ..code import Code
-from ..depth import CheckDepth
+from ..ina_data import InaData
 from .fofaclient import FofaClient
-from webtookit import Beian_TYC, sort_doaminandip, get_hash, get_icp
-from settings import cidrcollect, recu_ico
 
 
 class FofaRunner:
@@ -15,23 +11,39 @@ class FofaRunner:
 
     def __init__(self):
         self.client = FofaClient()
-        self.taskqueue = Queue()
-        self.codes = Code(self.name)
         self.cache = {}
 
     def run_code(self, code):
-        if code := self.codes.get_code_from_diff_and_union(code):
-            logging.info(f"{self.name} querying {code}")
-            return self.client.query(code, isfilter=True)
-        else:
-            return []
+        logging.info(f"{self.name} querying {str(code)}")
+        return self.client.query(str(code), isfilter=True)
 
-    @vthread.pool(1, name)
+    @vthread.pool(1, "ina"+name)
     def async_run_code(self, code):
+        code.update_type(self.name)
         self.cache[str(code)] = self.run_code(code)
 
     def get(self, code):
+        code.update_type(self.name)
         return self.cache[str(code)]
+
+    def to_idata_from_cache(self, code):
+        if not (data := self.get(code)):
+            return None
+        return self.to_idata(data)
+
+    def to_idata(self, data):
+        if not data:
+            return None
+
+        keys = ["url", "ip", "", "domain", "", "icp"]
+        idata = InaData()
+        idata.unions(**{keys[i]: v for i, v in enumerate(zip(*data)) if i != 2 and i != 4})
+        return idata
+
+
+
+
+
     # def get_fofa(self, fc):
     #     if code := self.fc.diffunion(fc):
     #         logging.info("fofa querying " + code)
@@ -46,16 +58,16 @@ class FofaRunner:
     #         s.remove("")
     #     return s
 
-    def combine_and_diff(self, data):
-        """
-        :param data:
-        :return : different urls,ips,domains,icps,bool
-        :rtype : List[set],bool
-        """
-        if len(data) == 0:
-            return {}, {}, {}, {}, False
-        keys = ["url", "ip", "", "domain", "", "icp"]
-        return *[self.fd.union(keys[i], self.cset(v)) for i, v in enumerate(zip(*data)) if i != 2 and i != 4], True
+    # def combine_and_diff(self, data):
+    #     """
+    #     :param data:
+    #     :return : different urls,ips,domains,icps,bool
+    #     :rtype : List[set],bool
+    #     """
+    #     if len(data) == 0:
+    #         return {}, {}, {}, {}, False
+    #     keys = ["url", "ip", "", "domain", "", "icp"]
+    #     return *[self.fd.union(keys[i], self.cset(v)) for i, v in enumerate(zip(*data)) if i != 2 and i != 4], True
 
     # def check_fofatype(self,fofatype):
     #     if isinstance(fofatype, list) or isinstance(fofatype, tuple):

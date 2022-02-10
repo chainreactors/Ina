@@ -1,12 +1,22 @@
-
 class Pair:
     link_symbol = {
         "fofa": "=",
         "zoomeye": ":"
     }
+    default_key = {
+        "ico": "ico",
+        "icp": "icp",
+        "cert": "cert",
+        "domain": "domain",
+        "ip": "ip",
+        "cidr": "cidr",
+    }
+    fofa_key = {
+        "ico": "icon_hash",
+    }
 
     def __init__(self, k, v, typ):
-        self.symbol = self.link_symbol[typ]
+        self.update_type(typ)
         self.key = k
         self.value = v
 
@@ -17,7 +27,18 @@ class Pair:
         return self.key == other.key and self.value == other.value
 
     def __str__(self):
-        return f'{self.key}{self.symbol}"{self.value}"'
+        return f'{self.key_map()}{self.symbol}"{self.value}"'
+
+    def update_type(self, typ):
+        self.typ = typ
+        self.symbol = self.link_symbol[typ]
+
+    def key_map(self):
+        return getattr(self, f"{self.typ}_key", self.default_key).get(self.key, self.default_key[self.key])
+
+    def to_string(self, typ):
+        self.update_type(typ)
+        return str(self)
 
 
 class Code:
@@ -26,10 +47,9 @@ class Code:
         "zoomeye": " "
     }
 
-    def __init__(self, typ, code=None, **kwargs):
+    def __init__(self, typ="fofa", code=None, **kwargs):
         self.params = set()
-        self.typ = typ
-        self.symbol = self.or_symbol[typ]
+        self.update_type(typ)
 
         if code:
             self.params = self.split(code.strip())
@@ -68,10 +88,14 @@ class Code:
         self.params = self.params.union(other.params)
         return self.join_from_pairs(self.params)
 
-    def get_code_from_diff_and_union(self, fc):
+    def get_diff_code_and_union(self, fc):
         tmpcode = fc - self
         self.union(fc)
-        return str(tmpcode)
+        return tmpcode
+
+    def update_type(self, typ):
+        self.typ = typ
+        self.symbol = self.or_symbol[typ]
 
     def splice(self, key, value):
         if value:
@@ -79,8 +103,9 @@ class Code:
         else:
             return ""
 
-    def split(self, code):
-        return {self.pair(c.split(self.symbol)[0], c.split(self.symbol)[1].strip('"')) for c in code.split(f" {self.symbol} ")}
+    def split(self, s):
+        link_symbol = Pair.link_symbol[self.typ]
+        return {self.pair(c.split(link_symbol)[0], c.split(link_symbol)[1].strip('"')) for c in s.split(f" {self.symbol} ")}
 
     def join(self, seq):
         return f" {self.symbol} ".join([self.splice(k, v) for k, v in seq])

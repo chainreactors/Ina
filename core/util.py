@@ -16,13 +16,6 @@ def is_contains_chinese(strs):
     return False
 
 
-def filter_ico(jobs):
-    if jobs == None:
-        return []
-    icohashs = [str(i[0]) for i in getvalues(jobs) if i[0] and not i[1]]
-    return [k for k, v in Counter(icohashs).items() if v >= 3]
-
-
 def write2file(string,filename):
     tmp = open(filename, "a+",encoding="utf-8")
     tmp.write(string)

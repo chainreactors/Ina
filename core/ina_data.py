@@ -7,8 +7,9 @@ class InaData:
     def __init__(self, printdiff=False, printfunc=print):
         for t in self.types:
             self[t] = set()
-        self.printdiff = printdiff
-        self.printfunc = printfunc
+        self.print_diff = printdiff
+        self.printer = printfunc
+        # self.cache = cache
 
     def __getitem__(self, item):
         return getattr(self, item)
@@ -45,8 +46,10 @@ class InaData:
         self["cidr"] = cidr
         return cidr
 
-    def union(self,t,data):
+    def union(self, t, data):
         # 去重合并数据,并且返回新增的数据
+        if not data:
+            return []
         data = set(data)
         if t == "icp": # icp格式化
             data = self.__format_icp(data)
@@ -56,15 +59,15 @@ class InaData:
             return self.update_cidr()
 
         diff = self.diff(t, data)
-        if self.printdiff:
+        if self.print_diff:
             if len(diff) != 0:
-                self.printfunc("add %d new %s %s"%(len(diff),t,str(diff)))
+                self.printer("add %d new %s %s" % (len(diff), t, str(diff)))
         self[t] = self[t].union(data)
         return diff
 
     def unions(self,**kwargs):
         # 批量更新数据
-        return [self.union(k,v) for k,v in kwargs.items()]
+        return [self.union(k, v) for k, v in kwargs.items()]
 
     def diff(self, t, data):
         # 获得指定类型相差的数据
@@ -80,8 +83,7 @@ class InaData:
 
     def merge(self, other):
         # 合并ina_data
-        for t in self.types:
-            self.union(t, other[t])
+        return {t: self.union(t, other[t]) for t in self.types}
 
     def output(self, types=["ip", "cidr", "domain"], outfunc=print):
         # 输出

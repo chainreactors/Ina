@@ -1,10 +1,9 @@
-from gevent import monkey
-monkey.patch_all()
 
-from core import *
+
+from core import ZoomeyeClient, Code
 
 
 if __name__ == '__main__':
-    fofa = Fofa()
-    fd = fofa.run('ip="47.95.116.67"')
-    fd.outputdata()
+    code = Code("zoomeye", cidr="47.95.116.67/28")
+    zoo = ZoomeyeClient()
+    zoo.query(str(code))
