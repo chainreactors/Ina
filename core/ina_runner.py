@@ -8,31 +8,44 @@ from .depth import CheckDepth
 
 
 class InaRunner:
-    def __init__(self, keep_source=False):
+
+    def __init__(self, idata=None, keep_source=False):
         self.engines = {
             "fofa": FofaRunner(),
             # "zoomeye":
         }
-        self.inadata = InaData(True)
+        if idata:
+            self.inadata = idata
+        else:
+            self.inadata = InaData(True)
         self.codequeue = Queue()
         self.code = Code()
         self.cache = {}
         self.keep_source = keep_source  # 用来收集数据来源, 大部分情况下并不需要知道数据来源,可以将多条语句合并查询减少api请求次数
 
-    def run_code(self, code):
+    def run_code(self, code, source="all"):
+        if source == "all":
+            source = self.engines.keys()
         if diffcodes := self.code.get_diff_code_and_union(code):  # 去掉已查询过的待查询目标
             for engine in self.engines.values():
+                if engine not in source:
+                    continue
                 engine.async_run_code(diffcodes)
 
             for name in self.engines.keys():
                 vthread.pool.wait("ina" + name)
 
             yield {engine.name: engine.get(diffcodes) for engine in self.engines.values() if engine.get(diffcodes)}
+            return
 
-    def run_pair(self, code):
+    def run_pair(self, code, source="all"):
+        if source == "all":
+            source = self.engines.keys()
         if diffcodes := self.code.get_diff_code_and_union(code):  # 去掉已查询过的待查询目标
             for c in diffcodes.params:
                 for engine in self.engines.values():
+                    if engine not in source:
+                        continue
                     engine.async_run_code(c)
             # 每个engine都是单线程的, 等待全部engine完成任务
             for name in self.engines.keys():
@@ -77,13 +90,13 @@ class InaRunner:
             datas = self.run_code(code)
 
         for data in datas:
-            if not data:  # 如果fofa无数据,则退出
-                return
+            if not data:  # 如果无数据,则跳过
+                continue
 
             new_idata = self.concat_idata(data)
             diffs = self.inadata.merge(new_idata)
 
-            if urls := diffs.get("url", None):
+            if urls := diffs.get("url", None):  # 通过云函数将所有url访问一遍, 并获取icp, iconhash等信息
                 icps = self.request_for_icp(urls)
                 if self.inadata.union("icp", icps):
                     self.queue_put(Code(icp=icps), depth)
@@ -102,6 +115,14 @@ class InaRunner:
         # self.inadata
 
     def run(self, code):
-        self.recu_run(code)
-        while self.codequeue.qsize() > 0:
+        self.queue_put(code, 0)
+
+        while self.codequeue.qsize() > 0:  # 广度优先
             self.recu_run(*self.codequeue.get())
+
+        # cidr 收集
+        self.inadata.update_cidr()
+        for data in self.run_pair(Code(cidr=self.inadata["cidr"])):
+            new_idata = self.concat_idata(data)
+            diffs = self.inadata.merge(new_idata)
+
