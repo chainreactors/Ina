@@ -1,7 +1,6 @@
-import logging
 import vthread
 
-from ..code import Code
+from .. import logging
 from ..ina_data import InaData
 from .fofaclient import FofaClient
 

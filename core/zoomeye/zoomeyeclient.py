@@ -1,5 +1,4 @@
-import logging
-
+from .. import logging
 from ..requests import *
 from settings import zoomeye_key
 

@@ -1,12 +1,11 @@
 from collections import Counter
+from ipaddress import *
+from itertools import groupby
+from socket import gethostbyname
 
 
 def count(data):
     return Counter(data)
-
-
-def getvalues(gevenlets):
-    return [i.value for i in gevenlets]
 
 
 def is_contains_chinese(strs):
@@ -20,15 +19,6 @@ def write2file(string,filename):
     tmp = open(filename, "a+",encoding="utf-8")
     tmp.write(string)
     tmp.close()
-
-from ipaddress import *
-from itertools import groupby
-from collections import Counter
-from socket import gethostbyname
-
-
-def count(data):
-    return Counter(data)
 
 
 class IPs:

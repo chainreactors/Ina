@@ -1,6 +1,7 @@
 import vthread
 from queue import Queue
 
+from . import logging
 from .code import Code
 from .fofa import FofaRunner
 from .ina_data import InaData
@@ -17,7 +18,7 @@ class InaRunner:
         if idata:
             self.inadata = idata
         else:
-            self.inadata = InaData(True)
+            self.inadata = InaData(True, logging.info)
         self.codequeue = Queue()
         self.code = Code()
         self.cache = {}
@@ -131,4 +132,6 @@ class InaRunner:
         for data in self.run_pair(Code(cidr=self.inadata["cidr"]), source="fofa"):
             new_idata = self.concat_idata(data)
             diffs = self.inadata.merge(new_idata)
+
+        return self.inadata
 

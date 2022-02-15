@@ -27,6 +27,12 @@ class InaData:
             res[t] = self[t] - other[t]
         return res
 
+    def __len__(self):
+        count = 0
+        for typ in self.types:
+            count += len(self[typ])
+        return count
+
     def getkey(self,k):
         # 判断目标数据是否合法
         assert k in self.types,"%s type not found" % k
@@ -90,8 +96,8 @@ class InaData:
 
         for t in types:
             if self.getkey(t) and self[t]:
-                outfunc("\n".join(self[t])+"\n")
+                outfunc("\n".join(self[t]))
 
-    def to_dict(self):
+    def to_dict(self, types=["ip", "cidr", "domain"]):
         self.update_cidr()
-        return {t: self[t] for t in self.types}
+        return {t: list(self[t]) for t in self.types if t in types}

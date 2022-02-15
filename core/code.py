@@ -119,3 +119,6 @@ class Code:
 
     def join_from_pairs(self, pairs):
         return f" {self.symbol} ".join([str(pair) for pair in pairs])
+
+    def short(self):
+        return str(self)[:15]

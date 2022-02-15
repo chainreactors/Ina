@@ -1,7 +1,6 @@
-import logging, gevent
-from queue import Queue
 import vthread
 
+from .. import logging
 from ..code import Code
 from .zoomeyeclient import ZoomeyeClient
 
@@ -11,7 +10,6 @@ class FofaRunner:
 
     def __init__(self):
         self.client = ZoomeyeClient()
-        self.taskqueue = Queue()
         self.codes = Code(self.name)
         self.cache = {}
 

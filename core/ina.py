@@ -1,12 +1,13 @@
 from .ina_data import InaData
 from .ina_runner import InaRunner
 from .code import Code
+from . import logging
 
 
 class Ina:
     def __init__(self):
-        self.idata = InaData()
-        self.history_data = []
+        self.idata = InaData(True, logging.info)
+        self.history = {}
 
     def input_parser(self, input):
         code = Code(code=input)
@@ -15,16 +16,17 @@ class Ina:
     def run(self, code):
         fr = InaRunner()
         code = self.input_parser(code)
-        fd = fr.run(code)
-        self.append_history(code, fd)
-        return fd
-
-    def append_history(self, fc, fd):
-        self.history_data.append((str(fc), fd))
+        idata = fr.run(code)
+        self.history[str(code)] = idata
+        return idata
 
     def get_history(self, index):
-        if len(self.history_data) > index:
-            return self.history_data[index]
+        for i, value in enumerate(self.history.values()):
+            if i == index:
+                return value
+        return None
+        # if len(self.history_data) > index:
+        #     return self.history_data[index]
 
     # def idata_update(self, fd):
     #     pass
