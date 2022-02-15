@@ -9,27 +9,31 @@ from .depth import CheckDepth
 
 
 class InaRunner:
-
-    def __init__(self, idata=None, keep_source=False):
+    def __init__(self, source="all", old_code=None, old_idata=None, keep_source=False):
         self.engines = {
             "fofa": FofaRunner(),
             # "zoomeye":
         }
-        if idata:
-            self.inadata = idata
+        if old_idata:
+            self.inadata = old_idata
         else:
             self.inadata = InaData(True, logging.info)
-        self.codequeue = Queue()
-        self.code = Code()
+
+        if old_code:
+            self.code = old_code
+        else:
+            self.code = Code()
+
+        if source == "all":
+            self.sources = self.engines.keys()
+        else:
+            self.sources = source.split(",")
+
         self.cache = {}
+        self.codequeue = Queue()
         self.keep_source = keep_source  # 用来收集数据来源, 大部分情况下并不需要知道数据来源,可以将多条语句合并查询减少api请求次数
 
-    def run_code(self, code, source="all"):
-        if source == "all":
-            source = self.engines.keys()
-        else:
-            source = source.split(",")
-
+    def run_code(self, code, source):
         if (diffcode := self.code.get_diff_code_and_union(code)) is not None:  # 去掉已查询过的待查询目标
             for engine in self.engines.values():
                 if engine.name not in source:
@@ -42,12 +46,7 @@ class InaRunner:
             yield {engine.name: engine.get(diffcode) for engine in self.engines.values() if engine.get(diffcode)}
             return
 
-    def run_pair(self, code, source="all"):
-        if source == "all":
-            source = self.engines.keys()
-        else:
-            source = source.split(",")
-
+    def run_pair(self, code, source):
         if (diffcode := self.code.get_diff_code_and_union(code)) is not None:  # 去掉已查询过的待查询目标
             for c in diffcode.params:
                 for engine in self.engines.values():
@@ -92,9 +91,9 @@ class InaRunner:
     @CheckDepth
     def recu_run(self, code, depth=1):
         if self.keep_source:
-            datas = self.run_pair(code)
+            datas = self.run_pair(code, self.sources)
         else:
-            datas = self.run_code(code)
+            datas = self.run_code(code, self.sources)
 
         for data in datas:
             if not data:  # 如果无数据,则跳过
@@ -129,7 +128,7 @@ class InaRunner:
 
         # cidr 收集
         self.inadata.update_cidr()
-        for data in self.run_pair(Code(cidr=self.inadata["cidr"]), source="fofa"):
+        for data in self.run_code(Code(cidr=self.inadata["cidr"]), source="fofa"):
             new_idata = self.concat_idata(data)
             diffs = self.inadata.merge(new_idata)
 

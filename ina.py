@@ -29,10 +29,10 @@ def help():
 @ina_context
 def run(ina, code, source):
     global front_data
-    front_data = ina.run(code)
+    front_data = ina.run(code, source)
     if not ina.idata:
         ina.idata = front_data
-    update_prompt(message="[%s] > "%code[:15])
+    update_prompt(message="[%s] > " % code[:15])
 
 
 @cli.command()
@@ -60,7 +60,7 @@ def choice(ina, index):
     """
     global front_data
     front_data, code = ina.get_history(index)
-    update_prompt(message="[%s] > "%code.short())
+    update_prompt(message="[%s] > " % code.short())
 
 
 @cli.command()
