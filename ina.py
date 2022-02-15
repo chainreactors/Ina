@@ -1,35 +1,66 @@
 # from gevent import monkey
 # monkey.patch_all()
 
+import click
+from click_repl import repl
+import json
+
 from core import *
-import click,json,os,logging
-from functools import partial
+
+ina_context = click.make_pass_decorator(Ina, ensure=True)
 
 
-def loadfile(filename):
-    f = open(filename, "r", encoding="utf-8")
-    s = f.read()
-    return loadjson(s)
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
+    ctx.obj = Ina()
+    if ctx.invoked_subcommand is None:
+        repl(ctx)
 
 
-def loadjson(s):
-    try:
-        return json.loads(s)
-    except:
-        return ""
+@cli.command()
+def help():
+    with click.Context(cli) as ctx:
+        click.echo(cli.get_help(ctx))
 
 
-@click.command()
-@click.option("--code", "-c", help="单条语句搜索,不递归爬取,无法与其他语句合并")
-@click.option("--filename", "-f", help="输出文件名")
-@click.option("--output", "-o", default="ip,domain,cidr")
-def command(code, filename, output):
-    main(code, filename, output)
+@cli.command()
+@click.argument("code")
+@ina_context
+def run(ina, code):
+    ina.run(code)
+
+@cli.command()
+@click.argument("code")
+def hisory(ina, ina_id):
+    pass
 
 
-def main(code, filename, output):
-    ina = Ina()
-    ina.run('domain="zjenergy.com.cn"')
+
+
+# def loadfile(filename):
+#     f = open(filename, "r", encoding="utf-8")
+#     s = f.read()
+#     return loadjson(s)
+#
+#
+# def loadjson(s):
+#     try:
+#         return json.loads(s)
+#     except:
+#         return ""
+
+
+# @click.command()
+# @click.option("--code", "-c", help="单条语句搜索,不递归爬取,无法与其他语句合并")
+# @click.option("--filename", "-f", help="输出文件名")
+# @click.option("--output", "-o", default="ip,domain,cidr")
+# def command(code, filename, output):
+#     main(code, filename, output)
+#
+#
+# def main(code, filename, output):
+#     cli()
 #
 # def main(code, filename, output):
 #     fofa = Fofa()
@@ -90,4 +121,5 @@ def main(code, filename, output):
 
 
 if __name__ == '__main__':
-    command()
+    # register_repl(cli)
+    cli()

@@ -26,32 +26,38 @@ class InaRunner:
     def run_code(self, code, source="all"):
         if source == "all":
             source = self.engines.keys()
-        if diffcodes := self.code.get_diff_code_and_union(code):  # 去掉已查询过的待查询目标
+        else:
+            source = source.split(",")
+
+        if (diffcode := self.code.get_diff_code_and_union(code)) is not None:  # 去掉已查询过的待查询目标
             for engine in self.engines.values():
-                if engine not in source:
+                if engine.name not in source:
                     continue
-                engine.async_run_code(diffcodes)
+                engine.async_run_code(diffcode)
 
             for name in self.engines.keys():
                 vthread.pool.wait("ina" + name)
 
-            yield {engine.name: engine.get(diffcodes) for engine in self.engines.values() if engine.get(diffcodes)}
+            yield {engine.name: engine.get(diffcode) for engine in self.engines.values() if engine.get(diffcode)}
             return
 
     def run_pair(self, code, source="all"):
         if source == "all":
             source = self.engines.keys()
-        if diffcodes := self.code.get_diff_code_and_union(code):  # 去掉已查询过的待查询目标
-            for c in diffcodes.params:
+        else:
+            source = source.split(",")
+
+        if (diffcode := self.code.get_diff_code_and_union(code)) is not None:  # 去掉已查询过的待查询目标
+            for c in diffcode.params:
                 for engine in self.engines.values():
-                    if engine not in source:
+                    if engine.name not in source:
                         continue
                     engine.async_run_code(c)
             # 每个engine都是单线程的, 等待全部engine完成任务
             for name in self.engines.keys():
                 vthread.pool.wait("ina" + name)
 
-            for c in diffcodes.params:
+            for c in diffcode.params:
                 yield {engine.name: engine.get(c) for engine in self.engines.values() if engine.get(c)}
             return
 
@@ -122,7 +128,7 @@ class InaRunner:
 
         # cidr 收集
         self.inadata.update_cidr()
-        for data in self.run_pair(Code(cidr=self.inadata["cidr"])):
+        for data in self.run_pair(Code(cidr=self.inadata["cidr"]), source="fofa"):
             new_idata = self.concat_idata(data)
             diffs = self.inadata.merge(new_idata)
 

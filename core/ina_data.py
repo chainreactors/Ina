@@ -1,4 +1,4 @@
-from webtookit.utils import is_ipv4, guessCIDRs
+from .util import *
 
 
 class InaData:
@@ -48,7 +48,7 @@ class InaData:
 
     def union(self, t, data):
         # 去重合并数据,并且返回新增的数据
-        if not data:
+        if not data or not (data := [d for d in data if d]):
             return []
         data = set(data)
         if t == "icp": # icp格式化
@@ -65,7 +65,7 @@ class InaData:
         self[t] = self[t].union(data)
         return diff
 
-    def unions(self,**kwargs):
+    def unions(self, **kwargs):
         # 批量更新数据
         return [self.union(k, v) for k, v in kwargs.items()]
 
@@ -77,9 +77,6 @@ class InaData:
 
     def diffs(self,**kwargs):
         return [self.diff(k,v) for k,v in kwargs.items()]
-
-    # def union_fofa(self,ips,urls,domains,icps):
-    #     self.unions(ip=ips,url=urls,domain=domains,icp=icps)
 
     def merge(self, other):
         # 合并ina_data

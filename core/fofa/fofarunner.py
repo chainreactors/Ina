@@ -24,7 +24,7 @@ class FofaRunner:
 
     def get(self, code):
         code.update_type(self.name)
-        return self.cache[str(code)]
+        return self.cache.get(str(code), None)
 
     def to_idata_from_cache(self, code):
         if not (data := self.get(code)):
@@ -37,7 +37,7 @@ class FofaRunner:
 
         keys = ["url", "ip", "", "domain", "", "icp"]
         idata = InaData()
-        idata.unions(**{keys[i]: v for i, v in enumerate(zip(*data)) if i != 2 and i != 4})
+        idata.unions(**{keys[i]: v for i, v in enumerate(zip(*data)) if keys[i]})
         return idata
 
 

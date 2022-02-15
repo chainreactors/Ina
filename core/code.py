@@ -1,3 +1,6 @@
+from collections import Counter
+
+
 class Pair:
     link_symbol = {
         "fofa": "=",
@@ -13,10 +16,11 @@ class Pair:
     }
     fofa_key = {
         "ico": "icon_hash",
+        "cidr": "ip"
     }
 
-    def __init__(self, k, v, typ):
-        self.update_type(typ)
+    def __init__(self, k, v, source):
+        self.update_type(source)
         self.key = k
         self.value = v
 
@@ -29,12 +33,12 @@ class Pair:
     def __str__(self):
         return f'{self.key_map()}{self.symbol}"{self.value}"'
 
-    def update_type(self, typ):
-        self.typ = typ
-        self.symbol = self.link_symbol[typ]
+    def update_type(self, source):
+        self.source = source
+        self.symbol = self.link_symbol[source]
 
     def key_map(self):
-        return getattr(self, f"{self.typ}_key", self.default_key).get(self.key, self.default_key[self.key])
+        return getattr(self, f"{self.source}_key", self.default_key).get(self.key, self.default_key[self.key])
 
     def to_string(self, typ):
         self.update_type(typ)
@@ -47,9 +51,9 @@ class Code:
         "zoomeye": " "
     }
 
-    def __init__(self, typ="fofa", code=None, **kwargs):
+    def __init__(self, source="fofa", code=None, **kwargs):
         self.params = set()
-        self.update_type(typ)
+        self.update_type(source)
 
         if code:
             self.params = self.split(code.strip())
@@ -72,17 +76,20 @@ class Code:
         return item.params < self.params
 
     def __sub__(self, other):
-        fc = Code(other.typ)
+        fc = Code(other.source)
         fc.params = self.params - other.params
         return fc
 
     def __add__(self, other):
-        fc = Code(other.typ)
+        fc = Code(other.source)
         fc.params = self.params.union(other.params)
         return fc
 
+    def major_type(self):
+        return Counter([p.key for p in self.params]).most_common()[0][0]
+
     def pair(self, k, v):
-        return Pair(k, v, self.typ)
+        return Pair(k, v, self.source)
 
     def union(self, other):
         self.params = self.params.union(other.params)
@@ -93,9 +100,9 @@ class Code:
         self.union(fc)
         return tmpcode
 
-    def update_type(self, typ):
-        self.typ = typ
-        self.symbol = self.or_symbol[typ]
+    def update_type(self, source):
+        self.source = source
+        self.symbol = self.or_symbol[source]
 
     def splice(self, key, value):
         if value:
@@ -104,7 +111,7 @@ class Code:
             return ""
 
     def split(self, s):
-        link_symbol = Pair.link_symbol[self.typ]
+        link_symbol = Pair.link_symbol[self.source]
         return {self.pair(c.split(link_symbol)[0], c.split(link_symbol)[1].strip('"')) for c in s.split(f" {self.symbol} ")}
 
     def join(self, seq):

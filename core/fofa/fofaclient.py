@@ -5,22 +5,21 @@ from ..requests import *
 from settings import fofa_key, fofa_email
 
 
-def check_error(func):
+def request_handler(func):
     def wrapper(self, *args, **kwargs):
         try:
             resp = func(self, *args, **kwargs)
             j = resp.json()
         except Exception as e:
-            logging.error("request error, %s" % str(e))
+            logging.error("request error, " + str(e))
             return {}
 
         err = j.get('error', False)
         if not err:
-            return resp
+            return resp.json()
         else:
-            logging.error("error: ", j.get("errmsg", ""))
-            return None
-
+            logging.error("error: " + j.get("error", ""))
+            return {}
     return wrapper
 
 
@@ -35,8 +34,8 @@ class FofaClient:
 
     def check_login(self):
         login_api_url = "/api/v1/info/my"
-        resp = self.request(login_api_url, self.auth)
-        if resp and resp.json().get('isvip', False):
+        json = self.request(login_api_url, self.auth)
+        if json.get('isvip', False):
             self.status = True
 
     def query(self, code, page=1, isfilter=False, fields="host,ip,port,domain,title,icp"):
@@ -55,16 +54,15 @@ class FofaClient:
             "size": 1000,
         }
         param.update(self.auth)
-        resp = self.request(search_api_url, param)
-        j = resp.json()
-        if "errmsg" in j:
-            logging.error(j)
-            logging.error("[-] " + j["errmsg"])
+        json = self.request(search_api_url, param)
+        if "errmsg" in json:
+            logging.error(json)
+            logging.error("[-] " + json["errmsg"])
             return []
-        res = j["results"]
+        res = json["results"]
 
         # 递归
-        if page * 1000 < j.get("size", 0) / 2:
+        if page * 1000 < json.get("size", 0) / 2:
             res += self.query(code, page + 1)
             return res
         return res
@@ -72,7 +70,7 @@ class FofaClient:
     def base64encode(self, code):
         return base64.b64encode((code).encode()).decode()
 
-    @check_error
+    @request_handler
     def request(self, api, param):
         resp = get(self.base_url + api, params=param)
         return resp
