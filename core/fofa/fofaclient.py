@@ -2,6 +2,7 @@ import base64
 import logging
 
 from ..requests import *
+from ..client import Client
 from settings import fofa_key, fofa_email
 
 
@@ -23,7 +24,7 @@ def request_handler(func):
     return wrapper
 
 
-class FofaClient:
+class FofaClient(Client):
     def __init__(self):
         self.status = False
         self.base_url = "https://fofa.info"
@@ -48,7 +49,7 @@ class FofaClient:
         if isfilter:
             code = f"({code})" + self.filtercode
         param = {
-            "qbase64": self.base64encode(code),
+            "qbase64": self.encode(code),
             "page": page,
             "fields": fields,
             "size": 1000,
@@ -67,8 +68,8 @@ class FofaClient:
             return res
         return res
 
-    def base64encode(self, code):
-        return base64.b64encode((code).encode()).decode()
+    def encode(self, code):
+        return base64.b64encode(code.encode()).decode()
 
     @request_handler
     def request(self, api, param):

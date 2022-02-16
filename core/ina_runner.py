@@ -2,7 +2,7 @@ import vthread
 from queue import Queue
 
 from . import logging
-from .code import Code
+from .ina_code import Code
 from .fofa import FofaRunner
 from .ina_data import InaData
 from .depth import CheckDepth
@@ -14,12 +14,12 @@ class InaRunner:
             "fofa": FofaRunner(),
             # "zoomeye":
         }
-        if old_idata:
+        if old_idata is not None:
             self.inadata = old_idata
         else:
             self.inadata = InaData(True, logging.info)
 
-        if old_code:
+        if old_code is not None:
             self.code = old_code
         else:
             self.code = Code()

@@ -122,3 +122,9 @@ class Code:
 
     def short(self):
         return str(self)[:15]
+
+    def to_string(self, typ=None):
+        if typ:
+            self.update_type(typ)
+
+        return str(self)

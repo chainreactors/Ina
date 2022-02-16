@@ -25,9 +25,13 @@ def help():
 
 @cli.command()
 @click.argument("code")
-@click.option("--source", "-s", help="choice sources: fofa,zoomeye")
+@click.option("--source", "-s", help="choice sources: fofa,zoomeye", default="all")
 @ina_context
 def run(ina, code, source):
+    """
+    example:
+        run domain="example.com" --source "fofa,zoomeye"
+    """
     global front_data
     front_data = ina.run(code, source)
     if not ina.idata:

@@ -1,6 +1,6 @@
 from .ina_data import InaData
 from .ina_runner import InaRunner
-from .code import Code
+from .ina_code import Code
 from . import logging
 
 
@@ -14,11 +14,11 @@ class Ina:
         code = Code(code=input)
         return code
 
-    def run(self, code, source):
-        runner = InaRunner(source, code)
-        code = self.input_parser(code)
+    def run(self, codestr, source):
+        runner = InaRunner(source, self.codecache)
+        code = self.input_parser(codestr)
         idata = runner.run(code)
-        self.history[str(code)] = idata
+        self.history[codestr] = idata
         self.codecache.union(runner.code)
         return idata
 

@@ -1,25 +1,25 @@
 import vthread
 
 from .. import logging
+from ..runner import Runner
 from ..ina_data import InaData
 from .fofaclient import FofaClient
 
 
-class FofaRunner:
+class FofaRunner(Runner):
     name = "fofa"
 
     def __init__(self):
         self.client = FofaClient()
         self.cache = {}
 
-    def run_code(self, code):
-        logging.info(f"{self.name} querying {str(code)}")
-        return self.client.query(str(code), isfilter=True)
+    def run_code(self, codestr):
+        logging.info(f"{self.name} querying {codestr}")
+        return self.client.query(codestr, isfilter=True)
 
     @vthread.pool(1, "ina"+name)
     def async_run_code(self, code):
-        code.update_type(self.name)
-        self.cache[str(code)] = self.run_code(code)
+        self.cache[code.to_string(self.name)] = self.run_code(code.to_string(self.name))
 
     def get(self, code):
         code.update_type(self.name)

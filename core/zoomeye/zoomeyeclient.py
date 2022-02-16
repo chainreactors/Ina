@@ -1,9 +1,10 @@
 from .. import logging
 from ..requests import *
+from ..client import Client
 from settings import zoomeye_key
 
 
-def check_error(func):
+def request_handler(func):
     def wrapper(self, *args, **kwargs):
         try:
             resp = func(self, *args, **kwargs)
@@ -28,7 +29,7 @@ def check_error(func):
     return wrapper
 
 
-class ZoomeyeClient:
+class ZoomeyeClient(Client):
     maxpage = 200
 
     def __init__(self):
@@ -66,7 +67,7 @@ class ZoomeyeClient:
     def filter_data(self):
         pass
 
-    @check_error
+    @request_handler
     def request(self, api, params=None):
         return get(self.base_url + api, headers=self.auth, params=params, debug=True)
 

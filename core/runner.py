@@ -1,23 +1,28 @@
 import logging
 import vthread
 
-from .code import Code
+from .ina_code import Code
 from .client import Client
 
 
 class Runner:
+    # 定义runner所需的基本接口
     name: str
-    codes: Code
     cache: dict
     client: Client
 
-    def run_code(self, code):
-        if code := self.codes.get_code_from_diff_and_union(code):
-            logging.info(f"{self.name} querying {code}")
-            return self.client.query(code, isfilter=True)
-        else:
-            return []
+    def get(self, code):
+        code.update_type(self.name)
+        return self.cache.get(str(code), None)
 
-    @vthread.pool(1, name)
-    def async_run_code(self, code):
-        self.cache[str(code)] = self.run_code(code)
+    def to_idata_from_cache(self, code):
+        if not (data := self.get(code)):
+            return None
+        return self.to_idata(data)
+
+    def run_code(self, codestr):
+        logging.info(f"{self.name} querying {codestr}")
+        return self.client.query(codestr)
+
+    def to_idata(self, data):
+        pass
