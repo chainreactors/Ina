@@ -104,5 +104,11 @@ def save(field, filename, json):
             front_data.output(field.split(","), f.write)
 
 
+@cli.command()
+def quit():
+    click.echo("exit.")
+    exit()
+
+
 if __name__ == '__main__':
     cli()

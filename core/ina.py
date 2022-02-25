@@ -14,7 +14,7 @@ class Ina:
         code = Code(code=input)
         return code
 
-    def run(self, codestr, source):
+    def run(self, codestr, source="all"):
         runner = InaRunner(source, self.codecache)
         code = self.input_parser(codestr)
         idata = runner.run(code)
