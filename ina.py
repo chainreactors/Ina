@@ -6,7 +6,7 @@ from core import *
 
 ina_context = click.make_pass_decorator(Ina)
 ina_obj = Ina()
-front_data = None  # type: InaData
+front_data = InaData()  # type: InaData
 
 
 @click.group(invoke_without_command=True)
@@ -63,8 +63,12 @@ def choice(ina, index):
         choice 1
     """
     global front_data
-    front_data, code = ina.get_history(index)
-    update_prompt(message="[%s] > " % code.short())
+    item = ina.get_history(int(index))
+    if item:
+        code, front_data = item
+        update_prompt(message="[%s] > " % code)
+    else:
+        click.echo("not found index: %s" %index)
 
 
 @cli.command()
@@ -83,7 +87,7 @@ def merge(ina):
 
 
 @cli.command()
-@click.option("--field", help="output type", default="ip,domain,cidr")
+@click.option("-field", help="output type", default="ip,domain,cidr")
 @click.option("-json", help="json format", default=False, is_flag=True)
 def output(field, json):
     if json:
@@ -102,6 +106,33 @@ def save(field, filename, json):
             f.write(jsondumps(front_data.to_dict()))
         else:
             front_data.output(field.split(","), f.write)
+
+
+@cli.command()
+@ina_context
+def clear_root(ina):
+    click.echo("root cleared")
+    ina.idata = InaData(True, logging.info)
+
+
+@cli.command()
+@ina_context
+def clear_cache(ina):
+    click.echo("cache cleared")
+    ina.cache = Code()
+
+
+@cli.command()
+def clear_history():
+    click.echo("history cleared")
+    ina.history = {}
+
+
+@cli.command()
+@ina_context
+def clear(ina):
+    click.echo("all cleared")
+    ina = Ina()
 
 
 @cli.command()
