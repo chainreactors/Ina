@@ -1,2 +1,2 @@
-from .fofaclient import FofaClient
-from .fofarunner import FofaRunner
+from .client import FofaClient
+from .runner import FofaRunner

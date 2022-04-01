@@ -2,7 +2,6 @@ from .util import *
 
 
 class InaData:
-    types = ["ico", "ip", "icp", "url", "domain", "cidr"]
 
     def __init__(self, printdiff=False, printfunc=print):
         for t in self.types:
@@ -15,10 +14,10 @@ class InaData:
         return getattr(self, item)
 
     def __setitem__(self, key, value):
-        self.__dict__[self.getkey(key)] = set(value)
+        self.__dict__[key] = set(value)
 
     def __getattr__(self, item):
-        return self.__dict__[self.getkey(item)]
+        return self.__dict__[item]
 
     def __sub__(self, other):
         # 获得数据差
@@ -32,11 +31,6 @@ class InaData:
         for typ in self.types:
             count += len(self[typ])
         return count
-
-    def getkey(self,k):
-        # 判断目标数据是否合法
-        assert k in self.types,"%s type not found" % k
-        return k
 
     def __format_icp(self, icps):
         # 格式化icp

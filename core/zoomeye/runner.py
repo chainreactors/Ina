@@ -1,29 +1,29 @@
 import vthread
 
-from .. import logging
+from .. import logging, InaData
+from ..ina_code import Code
 from ..runner import Runner
-from ..ina_data import InaData
-from .fofaclient import FofaClient
+from .client import ZoomeyeClient
 
 
-class FofaRunner(Runner):
-    name = "fofa"
+class ZoomeyeRunner(Runner):
+    name = "zoomeye"
 
     def __init__(self):
-        self.client = FofaClient()
+        self.client = ZoomeyeClient()
+        self.codes = Code(self.name)
         self.cache = {}
 
     def run_code(self, codestr):
         logging.info(f"{self.name} querying {codestr}")
-        return self.client.query(codestr, isfilter=True)
+        return self.client.query(codestr)
 
-    @vthread.pool(1, "ina"+name)
+    @vthread.pool(1, "ina" + name)
     def async_run_code(self, code):
         self.cache[code.to_string(self.name)] = self.run_code(code.to_string(self.name))
 
     def get(self, code):
-        code.update_type(self.name)
-        return self.cache.get(str(code), None)
+        return self.cache.get(code.to_string(self.name), None)
 
     def to_idata_from_cache(self, code):
         if not (data := self.get(code)):
@@ -38,7 +38,3 @@ class FofaRunner(Runner):
         idata = InaData()
         idata.unions(**{keys[i]: v for i, v in enumerate(zip(*data)) if keys[i]})
         return idata
-
-
-
-

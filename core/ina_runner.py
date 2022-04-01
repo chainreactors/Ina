@@ -79,13 +79,14 @@ class InaRunner:
             idata.merge(self.engines[name].to_idata(d))
         return idata
 
-    def request_for_icp(self, urls):
-        pass
-
-    def request_for_icon(self, urls):
-        pass
+    # def request_for_icp(self, urls):
+    #     pass
+    #
+    # def request_for_icon(self, urls):
+    #     pass
 
     def queue_put(self, code, depth):
+
         self.codequeue.put((code, depth+1))
 
     @CheckDepth
@@ -102,13 +103,13 @@ class InaRunner:
             new_idata = self.concat_idata(data)
             diffs = self.inadata.merge(new_idata)
 
-            if urls := diffs.get("url", None):  # 通过云函数将所有url访问一遍, 并获取icp, iconhash等信息
-                icps = self.request_for_icp(urls)
-                if self.inadata.union("icp", icps):
-                    self.queue_put(Code(icp=icps), depth)
-                icons = self.request_for_icon(urls)
-                if self.inadata.union("ico", icons):
-                    self.queue_put(Code(icon=icons), depth)
+            # if urls := diffs.get("url", None):  # 通过云函数将所有url访问一遍, 并获取icp, iconhash等信息
+            #     icps = self.request_for_icp(urls)
+            #     if self.inadata.union("icp", icps):
+            #         self.queue_put(Code(icp=icps), depth)
+            #     icons = self.request_for_icon(urls)
+            #     if self.inadata.union("ico", icons):
+            #         self.queue_put(Code(icon=icons), depth)
 
             if domains := diffs.get("domain", None):
                 self.queue_put(Code(domain=domains, cert=domains), depth)
@@ -118,7 +119,6 @@ class InaRunner:
 
             if icos := diffs.get("ico", None):
                 self.queue_put(Code(ico=icos), depth)
-        # self.inadata
 
     def run(self, code):
         self.queue_put(code, 0)

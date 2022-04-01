@@ -1,1 +1,1 @@
-from .zoomeyeclient import ZoomeyeClient
+from .client import ZoomeyeClient
