@@ -1,18 +1,14 @@
-from settings import *
+from settings import recu
 import logging
 
 
 class CheckDepth:
-    cert = recu_cert
-    domain = recu_domain
-    icon_hash = recu_ico
-    icp = recu_icp
 
     def __init__(self, func):
         self._func = func
 
     def too_deep(self, t, depth):
-        if depth != 1 and depth >= CheckDepth.__dict__[t]:
+        if depth != 1 and depth >= recu[t]:
             logging.warning("too depth")
             return True
         return False

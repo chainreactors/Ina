@@ -1,5 +1,6 @@
 import vthread
 from queue import Queue
+from tld import get_fld
 
 from . import logging
 from .ina_code import Code
@@ -115,13 +116,14 @@ class InaRunner:
             #         self.queue_put(Code(icon=icons), depth)
 
             if domains := diffs.get("domain", None):
+                domains = {get_fld(domain, fix_protocol=True) for domain in domains}
                 self.queue_put(Code(domain=domains, cert=domains), depth)
 
             if icps := diffs.get("icp", None):
                 self.queue_put(Code(icp=icps), depth)
 
-            if icos := diffs.get("ico", None):
-                self.queue_put(Code(ico=icos), depth)
+            # if icos := diffs.get("ico", None):
+            #     self.queue_put(Code(ico=icos), depth)
 
     def run(self, code):
         self.queue_put(code, 0)
