@@ -1,5 +1,5 @@
 from .. import logging
-from ..requests import *
+from ..requests import get
 from ..client import Client
 from settings import zoomeye_key
 
@@ -44,9 +44,6 @@ class ZoomeyeClient(Client):
             self.status = True
 
     def query(self, code, page=1):
-        if not self.status:
-            logging.error("login check failed, please check errmsg")
-            return []
         search_url = "/host/search"
         param = {
             "query": code,
@@ -69,6 +66,6 @@ class ZoomeyeClient(Client):
 
     @request_handler
     def request(self, api, params=None):
-        return get(self.base_url + api, headers=self.auth, params=params, debug=True)
+        return get(self.base_url + api, headers=self.auth, params=params)
 
 

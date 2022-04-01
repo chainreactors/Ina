@@ -3,16 +3,19 @@ from queue import Queue
 
 from . import logging
 from .ina_code import Code
-from .fofa import FofaRunner
 from .ina_data import InaData
 from .depth import CheckDepth
+from .fofa import FofaRunner
+from .zoomeye import ZoomeyeRunner
+from .hunter import HunterRunner
 
 
 class InaRunner:
     def __init__(self, source="all", old_code=None, old_idata=None, keep_source=False):
         self.engines = {
-            "fofa": FofaRunner(),
-            # "zoomeye":
+            # "fofa": FofaRunner(),
+            "zoomeye": ZoomeyeRunner(),
+            # "hunter": HunterRunner()
         }
         if old_idata is not None:
             self.inadata = old_idata

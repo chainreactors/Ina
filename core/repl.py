@@ -50,6 +50,7 @@ global_prompt_config = {
     "message": u"> ",
 }
 
+
 def _register_internal_command(names, target, description=None):
     if not hasattr(target, "__call__"):
         raise ValueError("Internal command must be a callable")

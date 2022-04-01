@@ -1,55 +1,66 @@
 import requests
 from functools import wraps
-from settings import requests_debug, is_debug
-import logging
-import traceback
+from settings import requests_debug, is_debug, mitm_proxy
+from . import logging
+
 import urllib3
-
-
 urllib3.disable_warnings()
 
 
-def __debug(func):
+def debug(func):
     # 如果requests中含有debug参数或setting中设置了is_debug=True 则request开启debug
     @wraps(func)
-    def wrapper(url, **kwargs):
+    def wrapper(url, **kwargs) -> requests.Response:
         if ("debug" in kwargs and kwargs.pop("debug")) or is_debug:
-            return func(url, **requests_debug, **kwargs)
+            kwargs.update(requests_debug)
         return func(url, **kwargs)
     return wrapper
 
 
-def __error(func):
+def error(func):
     # requests的自动错误处理
     @wraps(func)
-    def wrapper(url, **kwargs):
+    def wrapper(url, **kwargs) -> requests.Response:
         try:
             return func(url, **kwargs)
         except Exception as e:
-            logging.error(traceback.print_exc())
-            return
+            logging.error(str(e))
+            return None
     return wrapper
 
 
-@__error
-@__debug
-def get(url, **kwargs):
-    return requests.get(url, **kwargs)
+def proxy(func):
+    @wraps(func)
+    def wrapper(url, **kwargs):
+        if "proxy" in kwargs and kwargs.pop("proxy") and "proxies" not in kwargs:
+            return func(url, proxies=mitm_proxy, **kwargs)
+        return func(url, **kwargs)
+    return wrapper
 
 
-@__error
-@__debug
-def post(url, **kwargs):
-    requests.post(url, **kwargs)
+@error
+@debug
+@proxy
+def get(url, **kwargs) -> requests.Response:
+    return requests.get(url, verify=False, **kwargs)
 
 
-@__error
-@__debug
-def put(url, **kwargs):
-    requests.put(url, **kwargs)
+@error
+@debug
+@proxy
+def post(url, **kwargs) -> requests.Response:
+    return requests.post(url, verify=False, **kwargs)
 
 
-@__error
-@__debug
-def patch(url, **kwargs):
-    requests.patch(url, **kwargs)
+@error
+@debug
+@proxy
+def put(url, **kwargs) -> requests.Response:
+    return requests.put(url, verify=False, **kwargs)
+
+
+@error
+@debug
+@proxy
+def patch(url, **kwargs) -> requests.Response:
+    return requests.patch(url, verify=False, **kwargs)

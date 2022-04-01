@@ -1,8 +1,7 @@
 import logging
-import vthread
 
-from .ina_code import Code
 from .client import Client
+from .ina_data import InaData
 
 
 class Runner:
@@ -12,8 +11,7 @@ class Runner:
     client: Client
 
     def get(self, code):
-        code.update_type(self.name)
-        return self.cache.get(str(code), None)
+        return self.cache.get(code.to_string(self.name), None)
 
     def to_idata_from_cache(self, code):
         if not (data := self.get(code)):
@@ -24,5 +22,13 @@ class Runner:
         logging.info(f"{self.name} querying {codestr}")
         return self.client.query(codestr)
 
-    def to_idata(self, data):
+    def data_format(self, data) -> dict:
         pass
+
+    def to_idata(self, data):
+        if not data:
+            return None
+
+        idata = InaData()
+        idata.unions(**self.data_format(data))
+        return idata

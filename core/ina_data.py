@@ -2,22 +2,19 @@ from .util import *
 
 
 class InaData:
+    types = ["ip", "domain", "url", "ico", "icp", "cidr"]
 
     def __init__(self, printdiff=False, printfunc=print):
         for t in self.types:
-            self[t] = set()
+            self.__dict__[t] = set()
         self.print_diff = printdiff
         self.printer = printfunc
-        # self.cache = cache
 
     def __getitem__(self, item):
         return getattr(self, item)
 
     def __setitem__(self, key, value):
         self.__dict__[key] = set(value)
-
-    def __getattr__(self, item):
-        return self.__dict__[item]
 
     def __sub__(self, other):
         # 获得数据差
