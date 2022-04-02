@@ -54,7 +54,7 @@ class InaData:
 
     def __getattr__(self, item):
         if item in self.types:
-            return [getattr(asset, item) for asset in self.assets if getattr(asset, item)]
+            return list({getattr(asset, item) for asset in self.assets if getattr(asset, item)})
 
     def __sub__(self, other):
         return InaData(self.assets - other.assets, self.print_diff, self.printer)
@@ -71,7 +71,7 @@ class InaData:
         return list({asset.icp.split("-")[0] for asset in self.assets if asset.icp})
 
     @property
-    def domain(self):
+    def top_domain(self):
         return list({get_fld(asset.domain, fix_protocol=True) for asset in self.assets if asset.domain})
 
     @property
@@ -97,7 +97,7 @@ class InaData:
         # 合并ina_data
         diff = other - self
         if self.print_diff and len(diff):
-            self.printer("add %d new asset" % len(diff))
+            self.printer("add %d new assets" % len(diff))
         self.assets.update(other.assets)
         return diff
 

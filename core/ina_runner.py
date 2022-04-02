@@ -107,15 +107,7 @@ class InaRunner:
             new_idata = self.concat_idata(data)
             diffs = self.inadata.merge(new_idata)
 
-            # if urls := diffs.get("url", None):  # 通过云函数将所有url访问一遍, 并获取icp, iconhash等信息
-            #     icps = self.request_for_icp(urls)
-            #     if self.inadata.union("icp", icps):
-            #         self.queue_put(Code(icp=icps), depth)
-            #     icons = self.request_for_icon(urls)
-            #     if self.inadata.union("ico", icons):
-            #         self.queue_put(Code(icon=icons), depth)
-
-            if domains := diffs.domain:
+            if domains := diffs.top_domain:
                 self.queue_put(Code(domain=domains, cert=domains), depth)
 
             if icps := diffs.icp:
