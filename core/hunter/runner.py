@@ -27,7 +27,9 @@ class HunterRunner(Runner):
             "domain": "domain",
             "url": "url",
             "icp": "number",
+            "title": "web_title"
         }
-        return dict(zip(need_keys.keys(), zip(*[itemgetter(*need_keys.values())(i) for i in data])))
+        return [dict(zip(need_keys.keys(), itemgetter(*need_keys.values())(d))) for d in data]
+        # return dict(zip(need_keys.keys(), zip(*[itemgetter(*need_keys.values())(i) for i in data])))
 
 

@@ -21,7 +21,7 @@ class InaRunner:
         if old_idata is not None:
             self.inadata = old_idata
         else:
-            self.inadata = InaData(True, logging.info)
+            self.inadata = InaData(printdiff=True, printfunc=logging.info)
 
         if old_code is not None:
             self.code = old_code
@@ -69,7 +69,7 @@ class InaRunner:
         pass
 
     def get_idata(self, code):
-        return [engine.to_idata_from_cache(code) for engine in self.engines.values()]
+        return [engine.get_idata_from_cache(code) for engine in self.engines.values()]
 
     def concat_idata_from_cache(self, code):
         idata = InaData()
@@ -78,6 +78,7 @@ class InaRunner:
         return idata
 
     def concat_idata(self, data):
+        # 从多个数据源中取数据, 并且合并成一个inadata
         idata = InaData()
         for name, d in data.items():
             idata.merge(self.engines[name].to_idata(d))
@@ -90,7 +91,6 @@ class InaRunner:
     #     pass
 
     def queue_put(self, code, depth):
-
         self.codequeue.put((code, depth+1))
 
     @CheckDepth
@@ -115,11 +115,10 @@ class InaRunner:
             #     if self.inadata.union("ico", icons):
             #         self.queue_put(Code(icon=icons), depth)
 
-            if domains := diffs.get("domain", None):
-                domains = {get_fld(domain, fix_protocol=True) for domain in domains}
+            if domains := diffs.domain:
                 self.queue_put(Code(domain=domains, cert=domains), depth)
 
-            if icps := diffs.get("icp", None):
+            if icps := diffs.icp:
                 self.queue_put(Code(icp=icps), depth)
 
             # if icos := diffs.get("ico", None):
@@ -132,10 +131,8 @@ class InaRunner:
             self.recu_run(*self.codequeue.get())
 
         # cidr 收集
-        self.inadata.update_cidr()
-        for data in self.run_code(Code(cidr=self.inadata["cidr"]), source="fofa"):
-            new_idata = self.concat_idata(data)
-            diffs = self.inadata.merge(new_idata)
+        for data in self.run_code(Code(cidr=self.inadata.cidr), source="fofa"):
+            diffs = self.inadata.merge(self.concat_idata(data))
 
         return self.inadata
 

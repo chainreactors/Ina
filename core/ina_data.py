@@ -1,94 +1,115 @@
+from tld import get_fld
+
 from .util import *
 
 
-class InaData:
-    types = ["ip", "domain", "url", "ico", "icp", "cidr"]
+class d:
 
-    def __init__(self, printdiff=False, printfunc=print):
-        for t in self.types:
-            self.__dict__[t] = set()
+    def __init__(self, **kwargs):
+        if "ip" in kwargs and "url" in kwargs:
+            self.attr = {
+                "ip": kwargs["ip"],
+                "url": kwargs["url"],
+            }
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def __setattr__(self, key, value):
+        if key == "attr":
+            self.__dict__[key] = value
+        else:
+            self.attr[key] = value
+
+    def __getattr__(self, item):
+        if item in self.attr:
+            return self.attr[item]
+        return ""
+
+    def __str__(self):
+        return self.url
+
+    def __hash__(self):
+        return hash(self.url + self.ip + self.icp)
+
+    def __eq__(self, other):
+        return self.url == other.url and self.ip == self.ip and self.icp == self.icp
+
+    def to_dict(self):
+        return self.attr
+
+
+class InaData:
+    types = ["ip", "domain", "url", "ico", "icp", "cidr", "title"]
+
+    def __init__(self, assets=set(), printdiff=False, printfunc=print):
+        if isinstance(assets, set):
+            self.assets = assets.copy()
+        elif isinstance(assets, list):
+            self.assets = {d(**asset) for asset in assets}
+        else:
+            raise ValueError("unexpect asset type " + str(type(assets)))
+
         self.print_diff = printdiff
         self.printer = printfunc
 
-    def __getitem__(self, item):
-        return getattr(self, item)
-
-    def __setitem__(self, key, value):
-        self.__dict__[key] = set(value)
+    def __getattr__(self, item):
+        if item in self.types:
+            return [getattr(asset, item) for asset in self.assets if getattr(asset, item)]
 
     def __sub__(self, other):
-        # 获得数据差
-        res = InaData()
-        for t in self.types:
-            res[t] = self[t] - other[t]
-        return res
+        return InaData(self.assets - other.assets, self.print_diff, self.printer)
 
     def __len__(self):
-        count = 0
-        for typ in self.types:
-            count += len(self[typ])
-        return count
+        return len(self.assets)
 
-    def __format_icp(self, icps):
-        # 格式化icp
-        return {icp.split("-")[0] for icp in icps}
+    @property
+    def ip(self):
+        return list({asset.ip for asset in self.assets if asset.ip and is_ipv4(asset.ip)})
 
-    def __format_ipv4(self, ips):
-        # 去除ipv6地址
-        return {ip for ip in ips if is_ipv4(ip)}
+    @property
+    def icp(self):
+        return list({asset.icp.split("-")[0] for asset in self.assets if asset.icp})
 
-    def update_cidr(self):
-        # 因为目前不能做到cidr动态更新, 因此在特定阶段手动调用
-        cidr = guessCIDRs(self["ip"])
-        self["cidr"] = cidr
-        return cidr
+    @property
+    def domain(self):
+        return list({get_fld(asset.domain, fix_protocol=True) for asset in self.assets if asset.domain})
 
-    def union(self, t, data):
+    @property
+    def cidr(self):
+        return guessCIDRs(self.ip)
+
+    def get(self, key):
+        return getattr(self, key)
+
+    def gets(self, keys):
+        return [getattr(self, k) for k in keys]
+
+    def diff(self, data):
+        return (InaData(data) - self).assets
+
+    def union(self, data):
         # 去重合并数据,并且返回新增的数据
-        if not data or not (data := [d for d in data if d]):
-            return []
-        data = set(data)
-        if t == "icp": # icp格式化
-            data = self.__format_icp(data)
-        elif t == "ip":
-            data = self.__format_ipv4(data)
-        elif t == "cidr":
-            return self.update_cidr()
-
-        diff = self.diff(t, data)
-        if self.print_diff:
-            if len(diff) != 0:
-                self.printer("add %d new %s %s" % (len(diff), t, str(diff)))
-        self[t] = self[t].union(data)
+        diff = self.diff(data)
+        self.assets.update(diff)
         return diff
-
-    def unions(self, **kwargs):
-        # 批量更新数据
-        return [self.union(k, v) for k, v in kwargs.items()]
-
-    def diff(self, t, data):
-        # 获得指定类型相差的数据
-        if t == "icp": # icp格式化
-            data = self.__format_icp(data)
-        return set(data) - self[t]
-
-    def diffs(self,**kwargs):
-        return [self.diff(k,v) for k,v in kwargs.items()]
 
     def merge(self, other):
         # 合并ina_data
-        return {t: self.union(t, other[t]) for t in self.types}
+        diff = other - self
+        if self.print_diff and len(diff):
+            self.printer("add %d new asset" % len(diff))
+        self.assets.update(other.assets)
+        return diff
 
-    def output(self, types=["ip", "cidr", "domain"], outfunc=print):
+    def output(self, types=["ip", "cidr", "domain"], printer=None):
         # 输出
-        self.update_cidr()
+        if printer is None:
+            printer = self.printer
         if types == "all":
             types = self.types
 
         for t in types:
-            if self.getkey(t) and self[t]:
-                outfunc("\n".join(self[t]))
+            printer("\n".join(self.get(t)))
 
-    def to_dict(self, types=["ip", "cidr", "domain"]):
-        self.update_cidr()
-        return {t: list(self[t]) for t in self.types if t in types}
+    def to_dict(self):
+        return [asset.to_dict() for asset in self.assets]

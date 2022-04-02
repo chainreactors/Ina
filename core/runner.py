@@ -13,7 +13,7 @@ class Runner:
     def get(self, code):
         return self.cache.get(code.to_string(self.name), None)
 
-    def to_idata_from_cache(self, code):
+    def get_idata_from_cache(self, code):
         if not (data := self.get(code)):
             return None
         return self.to_idata(data)
@@ -30,5 +30,5 @@ class Runner:
             return None
 
         idata = InaData()
-        idata.unions(**self.data_format(data))
+        idata.union(self.data_format(data))
         return idata

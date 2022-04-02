@@ -6,7 +6,7 @@ from . import logging
 
 class Ina:
     def __init__(self):
-        self.idata = InaData(True, logging.info)
+        self.idata = InaData(printdiff=True, printfunc=logging.info)
         self.cache = Code()
         self.history = {}
 

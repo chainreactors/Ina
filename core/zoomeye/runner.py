@@ -20,11 +20,13 @@ class ZoomeyeRunner(Runner):
     def async_run_code(self, code):
         self.cache[code.to_string(self.name)] = self.run_code(code.to_string(self.name))
 
+    def extract_data(self, d):
+        return {
+                "ip": d["ip"],
+                "domain": d.get("rdns", "").lower(),
+                "ico": d.get("ico", {}).get("mmh3", ""),
+                "url": f"{d['portinfo']['service']}://{d['ip']}:{d['portinfo']['port']}",
+            }
+
     def data_format(self, data):
-        res = {k: [] for k in ["ip", "domain", "url", "ico"]}
-        for d in data:
-            res["domain"].append(d.get("rdns", "").lower())
-            res["ip"].append(d["ip"])
-            res["ico"].append(d.get("ico",{}).get("mmh3", ""))
-            res["url"].append(f"{d['portinfo']['service']}://{d['ip']}:{d['portinfo']['port']}")
-        return res
+        return [self.extract_data(d) for d in data]

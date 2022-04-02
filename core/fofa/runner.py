@@ -21,8 +21,8 @@ class FofaRunner(Runner):
         self.cache[code.to_string(self.name)] = self.run_code(code.to_string(self.name))
 
     def data_format(self, data):
-        keys = ["url", "ip", "", "domain", "", "icp"]
-        return {keys[i]: v for i, v in enumerate(zip(*data)) if keys[i]}
+        keys = ["url", "ip", "port", "domain", "title", "icp"]
+        return [dict(zip(keys, d)) for d in data]
 
 
 
