@@ -48,7 +48,7 @@ def run_once(ina, code, source):
     front_data = ina.run_once(code, source)
     if not ina.idata:
         ina.idata = front_data
-    update_prompt(message="[%s] > " % code.short())
+    update_prompt(message="[%s] > " % code[:15])
 
 @cli.command()
 @ina_context

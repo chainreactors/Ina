@@ -25,7 +25,7 @@ class Ina:
     def run_once(self, codestr, source="all"):
         runner = InaRunner(source, self.cache)
         code = self.input_parser(codestr)
-        idata = runner.run_code(code, source)
+        idata = runner.run_once(code)
         self.history[codestr] = idata
         self.cache.union(runner.code)
         return idata
