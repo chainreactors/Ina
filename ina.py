@@ -50,6 +50,7 @@ def run_once(ina, code, source):
         ina.idata = front_data
     update_prompt(message="[%s] > " % code[:15])
 
+
 @cli.command()
 @ina_context
 def history(ina):
@@ -108,7 +109,7 @@ def output(field, json):
 
 
 @cli.command()
-@click.option("--field", help="output type", default="ip,domain,cidr")
+@click.option("-field", help="output type", default="ip,domain,cidr")
 @click.option("--filename", "-f", help="save file name", default="tmp.txt")
 @click.option("-json", help="json format", default=False, is_flag=True)
 def save(field, filename, json):
