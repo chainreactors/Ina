@@ -8,5 +8,6 @@ except:
 from .ina import Ina
 from .ina_data import InaData
 from .ina_code import Code
+from .ina_runner import InaRunner
 from .repl import repl, update_prompt
 

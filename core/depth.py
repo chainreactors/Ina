@@ -1,5 +1,5 @@
 from settings import recu
-import logging
+from . import logging
 
 
 class CheckDepth:
