@@ -22,6 +22,14 @@ class Ina:
         self.cache.union(runner.code)
         return idata
 
+    def run_once(self, codestr, source="all"):
+        runner = InaRunner(source, self.cache)
+        code = self.input_parser(codestr)
+        idata = runner.run_code(code, source)
+        self.history[codestr] = idata
+        self.cache.union(runner.code)
+        return idata
+
     def get_history(self, index):
         for i, value in enumerate(self.history.items()):
             if i == index:

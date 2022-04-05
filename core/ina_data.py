@@ -62,6 +62,11 @@ class InaData:
     def __len__(self):
         return len(self.assets)
 
+    def __bool__(self):
+        if len(self.assets):
+            return True
+        return False
+
     @property
     def ip(self):
         return list({asset.ip for asset in self.assets if asset.ip and is_ipv4(asset.ip)})

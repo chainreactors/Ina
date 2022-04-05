@@ -36,8 +36,19 @@ def run(ina, code, source):
     front_data = ina.run(code, source)
     if not ina.idata:
         ina.idata = front_data
-    update_prompt(message="[%s] > " % code[:15])
+    update_prompt(message="[%s] > " % code.short())
 
+
+@cli.command()
+@click.argument("code")
+@click.option("--source", "-s", help="choice sources: fofa,zoomeye", default="all")
+@ina_context
+def run_once(ina, code, source):
+    global front_data
+    front_data = ina.run_once(code, source)
+    if not ina.idata:
+        ina.idata = front_data
+    update_prompt(message="[%s] > " % code.short())
 
 @cli.command()
 @ina_context
