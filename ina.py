@@ -1,5 +1,6 @@
 from json import dumps as jsondumps
 import click
+from prompt_toolkit.history import FileHistory
 
 from core import *
 
@@ -14,7 +15,11 @@ front_data = InaData()  # type: InaData
 def cli(ctx):
     ctx.obj = ina_obj
     if ctx.invoked_subcommand is None:
-        repl(ctx, {"message": "[none] > "})
+        prompt_kwargs = {
+            'history': FileHistory('./.ina-history'),
+            "message": "[none] > "
+        }
+        repl(ctx, prompt_kwargs=prompt_kwargs)
 
 
 @cli.command()
@@ -25,7 +30,7 @@ def help():
 
 @cli.command()
 @click.argument("code")
-@click.option("--source", "-s", help="choice sources: fofa,zoomeye", default="all")
+@click.option("--source", "-s", help="choice sources: fofa, zoomeye, hunter", default="all")
 @ina_context
 def run(ina, code, source):
     """
