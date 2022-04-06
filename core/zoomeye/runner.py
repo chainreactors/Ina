@@ -22,11 +22,12 @@ class ZoomeyeRunner(Runner):
 
     def extract_data(self, d):
         return {
-                "ip": d["ip"],
-                "domain": d.get("rdns", "").lower(),
-                "ico": d.get("ico", {}).get("mmh3", ""),
-                "url": f"{d['portinfo']['service']}://{d['ip']}:{d['portinfo']['port']}",
-            }
+            "ip": d["ip"],
+            "port": d["port"],
+            "domain": d.get("rdns", "").lower(),
+            "ico": d.get("ico", {}).get("mmh3", ""),
+            "url": f"{d['portinfo']['service']}://{d['ip']}:{d['portinfo']['port']}",
+        }
 
     def data_format(self, data):
         return [self.extract_data(d) for d in data]

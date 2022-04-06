@@ -29,10 +29,10 @@ class d:
         return self.url
 
     def __hash__(self):
-        return hash(self.url + self.ip + self.icp)
+        return hash(self.ip + self.port + self.domain + self.icp)
 
     def __eq__(self, other):
-        return self.url == other.url and self.ip == self.ip and self.icp == self.icp
+        return self.ip == other.ip and self.port == other.port and self.domain == other.domain and self.icp == other.icp
 
     def to_dict(self):
         return self.attr

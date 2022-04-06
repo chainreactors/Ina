@@ -25,6 +25,7 @@ class HunterRunner(Runner):
         need_keys = {
             "ip": "ip",
             "domain": "domain",
+            "port": "port",
             "url": "url",
             "icp": "number",
             "title": "web_title"
