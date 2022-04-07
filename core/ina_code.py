@@ -36,8 +36,8 @@ class Pair:
 
     def __init__(self, k, v, source):
         self.update_type(source)
-        self.key = k
-        self.value = v
+        self.key = k.strip()
+        self.value = v.strip().strip('"')
 
     def __hash__(self):
         return hash(self.key + self.value)
@@ -129,7 +129,7 @@ class Code:
 
     def split(self, s):
         link_symbol = Pair.link_symbol[self.source]
-        return {self.pair(c.split(link_symbol)[0], c.split(link_symbol)[1].strip('"')) for c in s.split(f" {self.symbol}")}
+        return {self.pair(c.split(link_symbol)[0], c.split(link_symbol)[1]) for c in s.split(f" {self.symbol}")}
 
     def join(self, typ=None):
         if typ:

@@ -24,7 +24,7 @@ def error(func):
         try:
             return func(url, **kwargs)
         except Exception as e:
-            logging.error(str(e))
+            logging.error(url + str(e))
             return None
     return wrapper
 

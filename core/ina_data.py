@@ -8,9 +8,11 @@ class d:
     def __init__(self, **kwargs):
         if "ip" in kwargs and "url" in kwargs:
             self.attr = {
-                "ip": kwargs["ip"],
-                "url": kwargs["url"],
+                "ip": kwargs.pop("ip"),
+                "url": kwargs.pop("url"),
+                "port": str(kwargs.pop("port"))
             }
+
         for k, v in kwargs.items():
             setattr(self, k, v)
 
