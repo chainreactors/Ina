@@ -86,7 +86,7 @@ class InaRunner:
         return idata
 
     def queue_put(self, code, depth):
-        self.codequeue.put((code, depth+1))
+        self.codequeue.put((code, depth))
 
     @CheckDepth
     def recu_run(self, code, depth=1):
@@ -103,22 +103,22 @@ class InaRunner:
             diffs = self.inadata.merge(new_idata)
 
             if domains := diffs.top_domain:
-                self.queue_put(Code(domain=domains, cert=domains), depth)
+                self.queue_put(Code(domain=domains, cert=domains), depth + 1)
 
             if icps := diffs.icp:
-                self.queue_put(Code(icp=icps), depth)
+                self.queue_put(Code(icp=icps), depth + 1)
 
             # if icos := diffs.get("ico", None):
             #     self.queue_put(Code(ico=icos), depth)
 
     def run(self, code):
-        self.queue_put(code, 0)
+        self.queue_put(code, 1)
 
         while self.codequeue.qsize() > 0:  # 广度优先
             self.recu_run(*self.codequeue.get())
 
         # cidr 收集
-        for data in self.run_code(Code(cidr=self.inadata.cidr), source="fofa"):
+        for data in self.run_code(Code(cidr=[c for c in self.inadata.cidr if c.split("/")[1] != 32]), source="fofa"):
             diffs = self.inadata.merge(self.concat_idata(data))
 
         return self.inadata

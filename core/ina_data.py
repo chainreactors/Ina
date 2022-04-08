@@ -9,8 +9,8 @@ class d:
         if "ip" in kwargs and "url" in kwargs:
             self.attr = {
                 "ip": kwargs.pop("ip"),
+                "port": str(kwargs.pop("port")),
                 "url": kwargs.pop("url"),
-                "port": str(kwargs.pop("port"))
             }
 
         for k, v in kwargs.items():
@@ -35,6 +35,9 @@ class d:
 
     def __eq__(self, other):
         return self.ip == other.ip and self.port == other.port and self.domain == other.domain and self.icp == other.icp
+
+    def to_string(self):
+        return "\t".join(self.attr.values())
 
     def to_dict(self):
         return self.attr

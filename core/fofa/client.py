@@ -19,7 +19,7 @@ def request_handler(func):
         if not err:
             return resp.json()
         else:
-            logging.error("error: " + j.get("error", ""))
+            logging.error("error: " + str(j.get("error", "")))
             return {}
     return wrapper
 
@@ -55,7 +55,7 @@ class FofaClient(Client):
         }
 
         json = self.request(search_api_url, param)
-        if "errmsg" in json:
+        if not json or "errmsg" in json:
             logging.error(json)
             logging.error("[-] " + json["errmsg"])
             return []
