@@ -142,7 +142,14 @@ def save(field, filename, json, full):
             front_data.output(field.split(","), f.write)
 
 
-@cli.command()
+@cli.group(invoke_without_command=True)
+@click.pass_context
+def clear(ctx):
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(clear_all)
+
+
+@clear.command("root")
 @ina_context
 def clear_root(ina):
     "clear root idata"
@@ -150,7 +157,7 @@ def clear_root(ina):
     ina.idata = InaData(True, logging.info)
 
 
-@cli.command()
+@clear.command("cache")
 @ina_context
 def clear_cache(ina):
     "clear cache"
@@ -158,16 +165,17 @@ def clear_cache(ina):
     ina.cache = Code()
 
 
-@cli.command()
-def clear_history():
+@clear.command("history")
+@ina_context
+def clear_history(ina):
     "clear history"
     click.echo("history cleared")
     ina.history = {}
 
 
-@cli.command()
+@clear.command("all")
 @ina_context
-def clear(ina):
+def clear_all(ina):
     "clear all data"
     click.echo("all cleared")
     ina = Ina()
