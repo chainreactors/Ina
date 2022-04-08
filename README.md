@@ -2,7 +2,7 @@
 
 空间搜索引擎递归爬虫, 能自动交叉递归爬取多个搜索引擎的数据.
 
-与其兄弟Ani(子公司icp递归爬虫)相辅相成
+与其兄弟Ani(子公司递归爬虫)相辅相成
 
 ## install
 下载项目代码
@@ -13,7 +13,7 @@
 
 安装依赖
 
-`pip install -r requirement`
+`pip install -r requirements.txt`
 
 
 ## Usage
@@ -47,11 +47,11 @@ run-once domain="zjenergy.com.cn"
 
 **output**
 `output` 命令输出结果到命令行, 默认的输出格式为加特林友好的按行分割数据, 可以直接复制到加特林, 可以通过-field指定字段
-![img.png](img3.png)
+![img.png](img/img3.png)
 
 
 `output -full` 为人类友好的数据格式
-![img_1.png](img4.png)
+![img_1.png](img/img4.png)
 
 
 `output -json` json格式输出
