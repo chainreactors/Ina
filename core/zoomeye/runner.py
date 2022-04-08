@@ -23,7 +23,7 @@ class ZoomeyeRunner(Runner):
     def extract_data(self, d):
         return {
             "ip": d["ip"],
-            "port": d["port"],
+            "port": d["portinfo"]["port"],
             "domain": d.get("rdns", "").lower(),
             "ico": d.get("ico", {}).get("mmh3", ""),
             "url": f"{d['portinfo']['service']}://{d['ip']}:{d['portinfo']['port']}",
