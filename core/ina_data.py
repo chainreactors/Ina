@@ -1,3 +1,5 @@
+import logging
+
 from tld import get_fld
 
 from .util import *
@@ -59,7 +61,7 @@ class InaData:
 
     def __getattr__(self, item):
         if item in self.types:
-            return list({getattr(asset, item) for asset in self.assets if getattr(asset, item)})
+            return list({str(value) for asset in self.assets if (value := getattr(asset, item))})
 
     def __sub__(self, other):
         return InaData(self.assets - other.assets, self.print_diff, self.printer)
@@ -119,7 +121,10 @@ class InaData:
             types = self.types
 
         for t in types:
-            printer("\n".join(self.get(t)))
+            if t in self.types:
+                printer("\n".join(self.get(t)))
+            else:
+                logging.warning("unexpected key: %s, please input : %s" %(t, ", ".join(self.types)))
 
     def to_dict(self):
         return [asset.to_dict() for asset in self.assets]

@@ -1,7 +1,9 @@
 from json import dumps as jsondumps
 import click
+from functools import partial
 from prompt_toolkit.history import FileHistory
 
+import settings
 from core import *
 
 
@@ -31,8 +33,9 @@ def help():
 @cli.command()
 @click.argument("code")
 @click.option("--source", "-s", help="choice sources: fofa, zoomeye, hunter", default="fofa")
+@click.option("-cidr", help="collect cidr", is_flag=True, default=False)
 @ina_context
-def run(ina, code, source):
+def run(ina, code, source, cidr):
     """
     auto running
 
@@ -42,9 +45,8 @@ def run(ina, code, source):
         run domain="example.com" --source all
     """
     global front_data
+    settings.cidrcollect = cidr
     front_data = ina.run(code, source)
-    if not ina.idata:
-        ina.idata = front_data
     update_prompt(message="[%s] > " % code[:15])
 
 
@@ -56,8 +58,6 @@ def run_once(ina, code, source):
     "run once code"
     global front_data
     front_data = ina.run_once(code, source)
-    if not ina.idata:
-        ina.idata = front_data
     update_prompt(message="[%s] > " % code[:15])
 
 
@@ -112,7 +112,7 @@ def merge(ina):
 
 
 @cli.command()
-@click.option("-field", help="output type", default="ip,domain,cidr")
+@click.option("-field", help="output type: " + ", ".join(InaData.types), default="ip,domain,cidr")
 @click.option("-json", help="json format", default=False, is_flag=True)
 @click.option("-full", help="full output", is_flag=True)
 def output(field, json, full):
@@ -126,12 +126,12 @@ def output(field, json, full):
 
 
 @cli.command()
-@click.option("-field", help="output type", default="ip,domain,cidr")
-@click.option("--filename", "-f", help="save file name", default="tmp.txt")
+@click.option("-field", help="output type: " + ", ".join(InaData.types), default="ip,domain,cidr")
+@click.option("--filename", "-f", help="save file name", default="tmp.txt", required=True)
 @click.option("-json", help="json format", default=False, is_flag=True)
 @click.option("-full", help="full output", is_flag=True)
 def save(field, filename, json, full):
-    "write to file"
+    "save to file"
     with open(filename, "a+", encoding="utf-8") as f:
         if json:
             f.write(jsondumps(front_data.to_dict()))
