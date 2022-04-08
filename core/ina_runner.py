@@ -1,7 +1,8 @@
+import click
 import vthread
 from queue import Queue
-from tld import get_fld
 
+from settings import cidrcollect
 from . import logging
 from .ina_code import Code
 from .ina_data import InaData
@@ -39,7 +40,7 @@ class InaRunner:
 
     def run_code(self, code, source):
         # run_code 设计成生成器主要为了兼容run_pair
-        if (diffcode := self.code.get_diff_code_and_union(code)) is not None:  # 去掉已查询过的待查询目标
+        if diffcode := self.code.get_diff_code_and_union(code):  # 去掉已查询过的待查询目标
             for engine in self.engines.values():
                 if engine.name not in source:
                     continue
@@ -50,9 +51,11 @@ class InaRunner:
 
             yield {engine.name: engine.get(diffcode) for engine in self.engines.values() if engine.get(diffcode)}
             return
+        else:
+            click.echo("all code already collected")
 
     def run_pair(self, code, source):
-        if (diffcode := self.code.get_diff_code_and_union(code)) is not None:  # 去掉已查询过的待查询目标
+        if diffcode := self.code.get_diff_code_and_union(code):  # 去掉已查询过的待查询目标
             for c in diffcode.params:
                 for engine in self.engines.values():
                     if engine.name not in source:
@@ -65,6 +68,8 @@ class InaRunner:
             for c in diffcode.params:
                 yield {engine.name: engine.get(c) for engine in self.engines.values() if engine.get(c)}
             return
+        else:
+            click.echo("all code already collected")
 
     def unique(self, data):
         pass
@@ -118,8 +123,9 @@ class InaRunner:
             self.recu_run(*self.codequeue.get())
 
         # cidr 收集
-        for data in self.run_code(Code(cidr=[c for c in self.inadata.cidr if c.split("/")[1] != 32]), source="fofa"):
-            diffs = self.inadata.merge(self.concat_idata(data))
+        if cidrcollect:
+            for data in self.run_code(Code(cidr=[c for c in self.inadata.cidr if c.split("/")[1] != "32"]), source="fofa"):
+                diffs = self.inadata.merge(self.concat_idata(data))
 
         return self.inadata
 

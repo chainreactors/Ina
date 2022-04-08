@@ -89,6 +89,11 @@ class Code:
     def __len__(self):
         len(self.params)
 
+    def __bool__(self):
+        if len(self.params):
+            return True
+        return False
+
     def __contains__(self, item):
         return item.params < self.params
 
