@@ -9,22 +9,22 @@ def request_handler(func):
         try:
             resp = func(self, *args, **kwargs)
         except Exception as e:
-            logging.error("request error, %s" % str(e))
+            logging.error("zoomeye request error, %s" % str(e))
             return {}
 
         if resp.status_code == 200:
             return resp.json()
         elif resp.status_code == 401:
-            logging.error("unauthorized")
+            logging.error("zoomeye unauthorized")
             return {}
         elif resp.status_code == 402:
-            logging.error("credits_insufficient")
+            logging.error("zoomeye credits_insufficient")
             return {}
         elif resp.status_code == 403:
-            logging.error("forbidden or suspended")
+            logging.error("zoomeye forbidden or suspended")
             return {}
         else:
-            logging.error("unknown error, %d, %s" % (resp.status_code, resp.text))
+            logging.error("zoomeye unknown error, %d, %s" % (resp.status_code, resp.text))
             return {}
     return wrapper
 

@@ -12,14 +12,14 @@ def request_handler(func):
             resp = func(self, *args, **kwargs)
             j = resp.json()
         except Exception as e:
-            logging.error("request error, " + str(e))
+            logging.error("fofa request error, " + str(e))
             return {}
 
         err = j.get('error', False)
         if not err:
             return resp.json()
         else:
-            logging.error("error: " + j.get("error", ""))
+            logging.error("fofa error: " + j.get("errmsg", ""))
             return {}
     return wrapper
 

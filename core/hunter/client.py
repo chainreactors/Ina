@@ -12,16 +12,16 @@ def request_handler(func):
             resp = func(self, *args, **kwargs)
             j = resp.json()
         except Exception as e:
-            logging.error("request error, %s" % str(e))
+            logging.error("hunter request error, %s" % str(e))
             return {}
 
-        if j["code"] in [200, 400]:
+        if j["code"] in [200, 400, 40205]:
             return j
         elif j["code"] == 401:
-            logging.error("unauthorized")
+            logging.error("hunter unauthorized")
             return {}
         else:
-            logging.error("unknown error, %d, %s" % (resp.status_code, resp.text))
+            logging.error("hunter unknown error, %d, %s" % (resp.status_code, resp.text))
             return {}
     return wrapper
 
