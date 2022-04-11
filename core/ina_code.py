@@ -24,7 +24,8 @@ class Pair:
 
     hunter_key = {
         "ico": "web.icon",
-        "cidr": "ip"
+        "cidr": "ip",
+        "icp": "icp.number",
     }
 
     zoomeye_key = {
