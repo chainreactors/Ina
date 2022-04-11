@@ -32,7 +32,7 @@ def help():
 
 @cli.command()
 @click.argument("code")
-@click.option("--source", "-s", help="choice sources: fofa, zoomeye, hunter", default="fofa")
+@click.option("--source", "-s", help="choice sources: fofa,zoomeye,hunter", default="fofa")
 @click.option("-cidr", help="collect cidr", is_flag=True, default=False)
 @ina_context
 def run(ina, code, source, cidr):
@@ -178,7 +178,9 @@ def clear_history(ina):
 def clear_all(ina):
     "clear all data"
     click.echo("all cleared")
-    ina = Ina()
+    ina.idata = InaData(printdiff=True, printfunc=logging.info)
+    ina.cache = Code()
+    ina.history = {}
 
 
 @cli.command()

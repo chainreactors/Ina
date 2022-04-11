@@ -1,12 +1,20 @@
-import logging
-
 from tld import get_fld
 
 from .util import *
+from . import logging
 
+
+def parse_root_domain(domain):
+    if "." in domain:
+        return get_fld(domain, fix_protocol=True)
+    else:
+        return ""
+
+
+def parse_root_icp(icp):
+    return "-".join(icp.split('-')[:-1])
 
 class d:
-
     def __init__(self, **kwargs):
         if "ip" in kwargs and "url" in kwargs:
             self.attr = {
@@ -80,11 +88,11 @@ class InaData:
 
     @property
     def icp(self):
-        return list({asset.icp.split("-")[0] for asset in self.assets if asset.icp})
+        return list({parse_root_icp(asset.icp) for asset in self.assets if asset.icp})
 
     @property
     def top_domain(self):
-        return list({get_fld(asset.domain, fix_protocol=True) for asset in self.assets if asset.domain})
+        return list({parse_root_domain(asset.domain) for asset in self.assets if asset.domain})
 
     @property
     def cidr(self):

@@ -1,3 +1,5 @@
+import time
+
 import click
 import vthread
 from queue import Queue
@@ -121,6 +123,7 @@ class InaRunner:
 
         while self.codequeue.qsize() > 0:  # 广度优先
             self.recu_run(*self.codequeue.get())
+            time.sleep(1)
 
         # cidr 收集
         if cidrcollect:
