@@ -1,3 +1,4 @@
+import time
 from base64 import b64encode
 
 from .. import logging
@@ -57,4 +58,5 @@ class HunterClient(Client):
     @request_handler
     def request(self, api, param):
         param["api-key"] = hunter_key
+        time.sleep(1)
         return get(self.base_url + api, params=param)
