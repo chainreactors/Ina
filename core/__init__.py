@@ -1,5 +1,5 @@
 try:
-    from webtookit.utils import logging
+    from lib.utils import logging
 except:
     import logging
     LOG_FORMAT = "%(asctime)s - %(message)s"

@@ -28,7 +28,8 @@ class HunterRunner(Runner):
             "port": "port",
             "url": "url",
             "icp": "number",
-            "title": "web_title"
+            "title": "web_title",
+            # "framework": "component"
         }
         return [dict(zip(need_keys.keys(), itemgetter(*need_keys.values())(d))) for d in data]
         # return dict(zip(need_keys.keys(), zip(*[itemgetter(*need_keys.values())(i) for i in data])))
