@@ -58,5 +58,5 @@ class HunterClient(Client):
     @request_handler
     def request(self, api, param):
         param["api-key"] = hunter_key
-        time.sleep(1)
+        time.sleep(2)
         return get(self.base_url + api, params=param)

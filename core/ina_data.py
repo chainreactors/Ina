@@ -5,14 +5,18 @@ from . import logging
 
 
 def parse_root_domain(domain):
-    if "." in domain:
-        return get_fld(domain, fix_protocol=True)
-    else:
+    try:
+        if "." in domain:
+            return get_fld(domain, fix_protocol=True)
+        else:
+            return ""
+    except:
         return ""
 
 
 def parse_root_icp(icp):
     return "-".join(icp.split('-')[:-1])
+
 
 class d:
     def __init__(self, **kwargs):
