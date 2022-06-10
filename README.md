@@ -22,7 +22,9 @@
 python ina.py
 
 **自动递归爬取:**
+
 run domain="zjenergy.com.cn"
+
 ![img.png](img/img.png)
 
 因为zoomeye与hunter限制次数的问题, 默认使用的搜索引擎为fofa. 可以使用`--source all`指定全部 或 `--source zoomeye,fofa`指定特定搜索引擎
@@ -35,21 +37,25 @@ run domain="zjenergy.com.cn"
 
 run-once domain="zjenergy.com.cn"
 
-
 **context 上下文**
+
 有一个全局上下文root, 可以使用`root`命令切换到root上下文
 
 每次run/run-once命令行, 会自动切换到当前上下文.
 
 在任务结束后, 可以通过`merge`命令是否合并数据,会自动去重
+
 ![img.png](img/img2.png)
 
 **output**
+
 `output` 命令输出结果到命令行, 默认的输出格式为加特林友好的按行分割数据, 可以直接复制到加特林, 可以通过-field指定字段
+
 ![img.png](img/img3.png)
 
 
 `output -full` 为人类友好的数据格式
+
 ![img_1.png](img/img4.png)
 
 
