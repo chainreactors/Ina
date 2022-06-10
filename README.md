@@ -21,7 +21,6 @@
 
 python ina.py
 
-
 **自动递归爬取:**
 run domain="zjenergy.com.cn"
 ![img.png](img/img.png)

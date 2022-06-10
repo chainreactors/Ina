@@ -29,7 +29,7 @@ class FofaClient(Client):
         self.status = False
         self.base_url = "https://fofa.info"
         self.auth = {"email": fofa_email, "key": fofa_key}
-        self.filtercode = ' && (country="CN" && region!="HK" && region!="TW" && title!="彩票" && title!="娱乐" && title!="导航"&& title!="视频" && title!="贝壳" && title!="二手房" && title!="考试" && title!="免费" && is_fraud=false)'
+        self.filtercode = ' && (country="CN" && is_fraud=false)'
         self.check_login()
 
     def check_login(self):
